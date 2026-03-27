@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import { errorHandler } from "./lib/utils.ts";
-import userRouter from "./routes/userRouter.ts";
+import { errorHandler } from "../lib/utils.ts";
+import userRouter from "../routes/userRouter.ts";
 
 const app = express();
 
@@ -13,7 +13,4 @@ app.use("/users", userRouter);
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+export default app;
