@@ -12,7 +12,7 @@ const validationHandler: RequestHandler = (req, res, next) => {
 };
 
 export const validate = (validators: ValidationChain[]) => [
-  validators,
+  ...validators,
   validationHandler,
 ];
 
