@@ -1,12 +1,7 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import type { ValidationError } from "express-validator";
 import request from "supertest";
 import app from "../tests/app.ts";
-import { prisma } from "../lib/prisma.ts";
-
-beforeEach(async () => {
-  await prisma.user.deleteMany();
-});
 
 describe("POST /users", () => {
   it("returns the created user on success", async () => {

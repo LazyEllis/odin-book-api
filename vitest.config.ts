@@ -2,6 +2,6 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    setupFiles: "dotenv/config",
+    setupFiles: "./src/tests/setup.ts",
   },
 });
