@@ -6,3 +6,51 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model User {
+  id              Int      @id @default(autoincrement())
+  name            String
+  username        String   @unique
+  password        String
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  description     String?
+  location        String?
+  profileImageUrl String?  @map("profile_image_url")
+  url             String?
+  followers       User[]   @relation("UserFollows")
+  following       User[]   @relation("UserFollows")
+  pinnedTweet     Tweet?   @relation("PinnedTweet")
+  tweets          Tweet[]  @relation("AuthoredTweet")
+  likes           Tweet[]  @relation("LikedTweet")
+  bookmarks       Tweet[]  @relation("BookmarkedTweet")
+
+  @@map("users")
+}
+
+model Tweet {
+  id                Int                 @id @default(autoincrement())
+  text              String?
+  attachment        String?
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  author            User                @relation("AuthoredTweet", fields: [authorId], references: [id])
+  authorId          Int                 @map("author_id")
+  pinnedBy          User?               @relation("PinnedTweet", fields: [pinnedById], references: [id])
+  pinnedById        Int?                @unique @map("pinned_by_id")
+  conversationId    Int                 @map("conversation_id")
+  conversation      Tweet               @relation("ConversationThread", fields: [conversationId], references: [id])
+  thread            Tweet[]             @relation("ConversationThread")
+  referencedTweetId Int?                @map("referenced_tweet_id")
+  referencedTweet   Tweet?              @relation("TweetReferences", fields: [referencedTweetId], references: [id])
+  referencedBy      Tweet[]             @relation("TweetReferences")
+  referenceType     TweetReferenceType?
+  likes             User[]              @relation("LikedTweet")
+  bookmarks         User[]              @relation("BookmarkedTweet")
+
+  @@map("tweets")
+}
+
+enum TweetReferenceType {
+  REPLY
+  RETWEET
+  QUOTE
+}
