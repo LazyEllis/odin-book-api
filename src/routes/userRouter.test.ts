@@ -16,18 +16,24 @@ describe("POST /users", () => {
       .expect("Content-Type", /json/)
       .expect(201);
 
-    expect(res.body).toMatchObject({
+    expect(res.body).toEqual({
       user: {
         id: expect.any(Number),
         name: "John Doe",
         username: "john_doe",
         createdAt: expect.any(String),
+        description: null,
+        location: null,
+        profileImageUrl: null,
+        url: null,
+        _count: {
+          followers: 0,
+          following: 0,
+        },
       },
       token: expect.any(String),
     });
-
     expect(Date.parse(res.body.user.createdAt)).not.toBe(NaN);
-    expect(res.body.user).not.toHaveProperty("password");
   });
 
   it("throws a 422 error if required fields are missing", async () => {

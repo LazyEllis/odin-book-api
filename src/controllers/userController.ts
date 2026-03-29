@@ -22,6 +22,14 @@ export const createUser: RequestHandler = async (req, res) => {
     omit: {
       password: true,
     },
+    include: {
+      _count: {
+        select: {
+          following: true,
+          followers: true,
+        },
+      },
+    },
   });
 
   const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, {
