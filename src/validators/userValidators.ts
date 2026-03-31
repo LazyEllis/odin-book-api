@@ -27,9 +27,11 @@ const nameValidators = [
             equals: value,
             mode: "insensitive",
           },
-          NOT: {
-            id: req.user?.id,
-          },
+          ...(req.user && {
+            NOT: {
+              id: req.user.id,
+            },
+          }),
         },
       });
 
@@ -49,4 +51,26 @@ export const validateUserCreation = validate([
   body("passwordConfirmation")
     .custom((value, { req }) => req.body.password === value)
     .withMessage("The passwords must match."),
+]);
+
+export const validateUserUpdate = validate([
+  ...nameValidators,
+  body("description")
+    .trim()
+    .default(null)
+    .isLength({ max: 160 })
+    .withMessage("The description cannot exceed 160 characters.")
+    .optional({ values: "null" }),
+  body("location")
+    .trim()
+    .default(null)
+    .isLength({ max: 30 })
+    .withMessage("The location cannot exceed 30 characters.")
+    .optional({ values: "null" }),
+  body("url")
+    .trim()
+    .default(null)
+    .isURL()
+    .withMessage("The URL must be a valid URL.")
+    .optional({ values: "null" }),
 ]);
