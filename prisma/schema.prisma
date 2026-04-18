@@ -8,49 +8,91 @@ datasource db {
 }
 
 model User {
-  id              Int      @id @default(autoincrement())
+  id              Int        @id @default(autoincrement())
   name            String
-  username        String   @unique
+  username        String     @unique
   password        String
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz()
   description     String?
   location        String?
-  profileImageUrl String?  @map("profile_image_url")
+  profileImageUrl String?    @map("profile_image_url")
   url             String?
-  followers       User[]   @relation("UserFollows")
-  following       User[]   @relation("UserFollows")
-  pinnedPost      Post?    @relation("PinnedPost")
-  posts           Post[]   @relation("AuthoredPost")
-  likes           Post[]   @relation("LikedPost")
-  bookmarks       Post[]   @relation("BookmarkedPost")
+  followers       Follow[]   @relation("follower")
+  following       Follow[]   @relation("following")
+  pinnedPost      Post?      @relation("PinnedPost")
+  posts           Post[]     @relation("AuthoredPost")
+  likes           Like[]
+  bookmarks       Bookmark[]
+  reposts         Repost[]
 
   @@map("users")
 }
 
+model Follow {
+  follower    User     @relation("follower", fields: [followerId], references: [id])
+  followerId  Int      @map("follower_id")
+  following   User     @relation("following", fields: [followingId], references: [id])
+  followingId Int      @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@id([followerId, followingId])
+  @@map("follows")
+}
+
 model Post {
-  id               Int                @id @default(autoincrement())
-  text             String?
-  attachment       String?
-  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz()
-  author           User               @relation("AuthoredPost", fields: [authorId], references: [id])
-  authorId         Int                @map("author_id")
-  pinnedBy         User?              @relation("PinnedPost", fields: [pinnedById], references: [id])
-  pinnedById       Int?               @unique @map("pinned_by_id")
-  conversationId   Int                @map("conversation_id")
-  conversation     Post               @relation("ConversationThread", fields: [conversationId], references: [id])
-  thread           Post[]             @relation("ConversationThread")
-  referencedPostId Int?               @map("referenced_post_id")
-  referencedPost   Post?              @relation("PostReferences", fields: [referencedPostId], references: [id])
-  referencedBy     Post[]             @relation("PostReferences")
-  referenceType    PostReferenceType?
-  likes            User[]             @relation("LikedPost")
-  bookmarks        User[]             @relation("BookmarkedPost")
+  id              Int        @id @default(autoincrement())
+  text            String
+  attachment      String?
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  author          User       @relation("AuthoredPost", fields: [authorId], references: [id])
+  authorId        Int        @map("author_id")
+  pinnedBy        User?      @relation("PinnedPost", fields: [pinnedById], references: [id])
+  pinnedById      Int?       @unique @map("pinned_by_id")
+  conversationId  Int?       @map("conversation_id")
+  conversation    Post?      @relation("ConversationThread", fields: [conversationId], references: [id])
+  thread          Post[]     @relation("ConversationThread")
+  inReplyToPostId Int?       @map("in_reply_to_post_id")
+  repliedTo       Post?      @relation("PostReplies", fields: [inReplyToPostId], references: [id])
+  replies         Post[]     @relation("PostReplies")
+  quotedPostId    Int?       @map("quoted_post_id")
+  quotedPost      Post?      @relation("PostQuotes", fields: [quotedPostId], references: [id])
+  quotes          Post[]     @relation("PostQuotes")
+  likes           Like[]
+  bookmarks       Bookmark[]
+  reposts         Repost[]
 
   @@map("posts")
 }
 
-enum PostReferenceType {
-  REPLY
-  REPOST
-  QUOTE
+model Like {
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @map("user_id")
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@id([userId, postId])
+  @@map("likes")
+}
+
+model Bookmark {
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @map("user_id")
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@id([userId, postId])
+  @@map("bookmarks")
+}
+
+model Repost {
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @map("user_id")
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    Int      @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  @@id([userId, postId])
+  @@map("reposts")
 }
