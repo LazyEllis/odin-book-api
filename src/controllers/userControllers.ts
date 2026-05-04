@@ -3,6 +3,27 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma.ts";
 
+export const listUsers: RequestHandler = async (req, res) => {
+  const users = await prisma.user.findMany({
+    omit: {
+      password: true,
+    },
+    include: {
+      _count: {
+        select: {
+          followers: true,
+          following: true,
+        },
+      },
+    },
+    orderBy: {
+      username: "asc",
+    },
+  });
+
+  res.json(users);
+};
+
 export const createUser: RequestHandler = async (req, res) => {
   const { name, username, password } = req.body;
 

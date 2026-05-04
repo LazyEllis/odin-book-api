@@ -182,3 +182,49 @@ describe("POST /users", () => {
     });
   });
 });
+
+describe("GET /users", () => {
+  it("returns all created users sorted alphabetically", async () => {
+    await request(app).post("/users").send(validPayload);
+
+    await request(app)
+      .post("/users")
+      .send({ ...validPayload, name: "Jane Doe", username: "jane_doe" });
+
+    const res = await request(app)
+      .get("/users")
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual([
+      {
+        id: expect.any(Number),
+        name: "Jane Doe",
+        username: "jane_doe",
+        createdAt: expect.any(String),
+        description: null,
+        location: null,
+        profileImageUrl: null,
+        url: null,
+        _count: {
+          followers: 0,
+          following: 0,
+        },
+      },
+      {
+        id: expect.any(Number),
+        name: "John Doe",
+        username: "john_doe_123",
+        createdAt: expect.any(String),
+        description: null,
+        location: null,
+        profileImageUrl: null,
+        url: null,
+        _count: {
+          followers: 0,
+          following: 0,
+        },
+      },
+    ]);
+  });
+});
