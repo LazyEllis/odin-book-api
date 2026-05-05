@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 import { validate } from "../lib/utils.ts";
 import { prisma } from "../lib/prisma.ts";
 
@@ -42,4 +42,8 @@ export const validateUserCreation = validate([
   body("passwordConfirmation")
     .custom((value, { req }) => req.body.password === value)
     .withMessage("The passwords must match."),
+]);
+
+export const validateUserId = validate([
+  param("userId").isInt().withMessage("The user ID must be an integer").toInt(),
 ]);

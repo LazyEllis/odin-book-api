@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma.ts";
+import { NotFoundError } from "../lib/errors.ts";
 
 export const listUsers: RequestHandler = async (req, res) => {
   const users = await prisma.user.findMany({
@@ -57,4 +58,61 @@ export const createUser: RequestHandler = async (req, res) => {
   });
 
   res.status(201).json({ user, token });
+};
+
+export const getUserById: RequestHandler = async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: Number(userId),
+    },
+    omit: {
+      password: true,
+    },
+    include: {
+      _count: {
+        select: {
+          followers: true,
+          following: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  res.json(user);
+};
+
+export const getUserByUsername: RequestHandler = async (req, res) => {
+  const { username } = req.params;
+
+  const user = await prisma.user.findFirst({
+    where: {
+      username: {
+        equals: String(username),
+        mode: "insensitive",
+      },
+    },
+    omit: {
+      password: true,
+    },
+    include: {
+      _count: {
+        select: {
+          followers: true,
+          following: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  res.json(user);
 };

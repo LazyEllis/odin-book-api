@@ -228,3 +228,108 @@ describe("GET /users", () => {
     ]);
   });
 });
+
+describe("GET /users/:userId", () => {
+  it("returns a user on success", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .get(`/users/${userRes.body.user.id}`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      id: expect.any(Number),
+      name: "John Doe",
+      username: "john_doe_123",
+      createdAt: expect.any(String),
+      description: null,
+      location: null,
+      profileImageUrl: null,
+      url: null,
+      _count: {
+        followers: 0,
+        following: 0,
+      },
+    });
+  });
+
+  it("returns a 404 error if the user ID doesn't exist", async () => {
+    await request(app)
+      .get("/users/1")
+      .expect("Content-Type", /json/)
+      .expect({ message: "User not found" })
+      .expect(404);
+  });
+
+  it("returns a 422 error if the user ID is not an integer", async () => {
+    const res = await request(app)
+      .get("/users/1.5")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "userId" }),
+      ]),
+    });
+  });
+});
+
+describe("GET /users/by/username/:username", () => {
+  it("returns a user on success", async () => {
+    await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .get("/users/by/username/john_doe_123")
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      id: expect.any(Number),
+      name: "John Doe",
+      username: "john_doe_123",
+      createdAt: expect.any(String),
+      description: null,
+      location: null,
+      profileImageUrl: null,
+      url: null,
+      _count: {
+        followers: 0,
+        following: 0,
+      },
+    });
+  });
+
+  it("returns the same user when username is provided in different case", async () => {
+    await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .get("/users/by/username/JOHN_DOE_123")
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      id: expect.any(Number),
+      name: "John Doe",
+      username: "john_doe_123",
+      createdAt: expect.any(String),
+      description: null,
+      location: null,
+      profileImageUrl: null,
+      url: null,
+      _count: {
+        followers: 0,
+        following: 0,
+      },
+    });
+  });
+
+  it("returns a 404 error if a user with the username doesn't exist", async () => {
+    await request(app)
+      .get("/users/by/username/john_doe_123")
+      .expect("Content-Type", /json/)
+      .expect({ message: "User not found" })
+      .expect(404);
+  });
+});
