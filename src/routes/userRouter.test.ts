@@ -229,6 +229,48 @@ describe("GET /users", () => {
   });
 });
 
+describe("GET /users/me", () => {
+  it("returns the authenticated user on success", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .get("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      id: expect.any(Number),
+      name: "John Doe",
+      username: "john_doe_123",
+      createdAt: expect.any(String),
+      description: null,
+      location: null,
+      profileImageUrl: null,
+      url: null,
+      _count: {
+        followers: 0,
+        following: 0,
+      },
+    });
+  });
+
+  it("returns a 401 error if unauthenticated", async () => {
+    await request(app)
+      .get("/users/me")
+      .expect("Content-Type", /json/)
+      .expect({ message: "Unauthorized" })
+      .expect(401);
+
+    await request(app)
+      .get("/users/me")
+      .auth("invalid-token", { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect({ message: "Unauthorized" })
+      .expect(401);
+  });
+});
+
 describe("GET /users/:userId", () => {
   it("returns a user on success", async () => {
     const userRes = await request(app).post("/users").send(validPayload);
