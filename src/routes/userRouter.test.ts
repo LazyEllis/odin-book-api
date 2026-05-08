@@ -9,6 +9,14 @@ const validPayload = {
   passwordConfirmation: "Password123!",
 };
 
+const userUpdatePayload = {
+  name: "Jonathan Doe",
+  username: "jonathan_doe",
+  description: "I'm just a silly guy that likes computer science.",
+  location: "Somewhere",
+  url: "https://jonathandoe.com",
+};
+
 describe("POST /users", () => {
   it("returns the created user with a token on success", async () => {
     const res = await request(app)
@@ -265,6 +273,241 @@ describe("GET /users/me", () => {
     await request(app)
       .get("/users/me")
       .auth("invalid-token", { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect({ message: "Unauthorized" })
+      .expect(401);
+  });
+});
+
+describe("PUT /users/me", () => {
+  it("returns the authenticated user on success", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .put("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send(userUpdatePayload)
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      id: expect.any(Number),
+      name: userUpdatePayload.name,
+      username: userUpdatePayload.username,
+      createdAt: expect.any(String),
+      description: userUpdatePayload.description,
+      location: userUpdatePayload.location,
+      profileImageUrl: null,
+      url: userUpdatePayload.url,
+      _count: {
+        followers: 0,
+        following: 0,
+      },
+    });
+  });
+
+  it("returns the authenticated user when username is unmodified", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .put("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send({ ...userUpdatePayload, username: validPayload.username })
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      id: expect.any(Number),
+      name: userUpdatePayload.name,
+      username: validPayload.username,
+      createdAt: expect.any(String),
+      description: userUpdatePayload.description,
+      location: userUpdatePayload.location,
+      profileImageUrl: null,
+      url: userUpdatePayload.url,
+      _count: {
+        followers: 0,
+        following: 0,
+      },
+    });
+  });
+
+  it("returns the authenticated user when optional fields are empty strings", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .put("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send({ ...userUpdatePayload, description: "", location: "", url: "" })
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      id: expect.any(Number),
+      name: userUpdatePayload.name,
+      username: userUpdatePayload.username,
+      createdAt: expect.any(String),
+      description: null,
+      location: null,
+      profileImageUrl: null,
+      url: null,
+      _count: {
+        followers: 0,
+        following: 0,
+      },
+    });
+  });
+
+  it("returns a 422 error when name exceeds 50 characters", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .put("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send({
+        ...userUpdatePayload,
+        name: "Has Erling Braut Haaland Broken Another Goalscoring Record?",
+      })
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "name" }),
+      ]),
+    });
+  });
+
+  it("returns a 422 error when username is less than 5 characters", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .put("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send({ ...userUpdatePayload, username: "john" })
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "username" }),
+      ]),
+    });
+  });
+
+  it("returns a 422 error when username exceeds 15 characters", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .put("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send({ ...userUpdatePayload, username: "jonathan_mcdonald" })
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "username" }),
+      ]),
+    });
+  });
+
+  it("returns a 422 error when username contains spaces", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .put("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send({ ...userUpdatePayload, username: "john doe" })
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "username" }),
+      ]),
+    });
+  });
+
+  it("returns a 422 error when username contains invalid special characters", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .put("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send({ ...userUpdatePayload, username: "john.doe" })
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "username" }),
+      ]),
+    });
+  });
+
+  it("returns a 422 error when description exceeds 160 characters", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .put("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send({
+        ...userUpdatePayload,
+        description:
+          "Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus.",
+      })
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "description" }),
+      ]),
+    });
+  });
+
+  it("returns a 422 error when location exceeds 30 characters", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .put("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send({
+        ...userUpdatePayload,
+        location: "A really long location is invalid",
+      })
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "location" }),
+      ]),
+    });
+  });
+
+  it("returns a 422 error when URL is invalid", async () => {
+    const userRes = await request(app).post("/users").send(validPayload);
+
+    const res = await request(app)
+      .put("/users/me")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send({ ...userUpdatePayload, url: "Invalid URL" })
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "url" }),
+      ]),
+    });
+  });
+
+  it("returns a 401 error if unauthenticated", async () => {
+    await request(app)
+      .put("/users/me")
+      .send(userUpdatePayload)
       .expect("Content-Type", /json/)
       .expect({ message: "Unauthorized" })
       .expect(401);

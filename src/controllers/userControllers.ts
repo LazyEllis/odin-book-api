@@ -88,6 +88,37 @@ export const getCurrentUser: RequestHandler = async (req, res) => {
   res.json(user);
 };
 
+export const updateCurrentUser: RequestHandler = async (req, res) => {
+  const { id } = getAuthenticatedUser(req.user);
+  const { name, username, description, location, url } = req.body;
+
+  const user = await prisma.user.update({
+    data: {
+      name,
+      username,
+      description,
+      location,
+      url,
+    },
+    where: {
+      id,
+    },
+    omit: {
+      password: true,
+    },
+    include: {
+      _count: {
+        select: {
+          followers: true,
+          following: true,
+        },
+      },
+    },
+  });
+
+  res.json(user);
+};
+
 export const getUserById: RequestHandler = async (req, res) => {
   const { userId } = req.params;
 

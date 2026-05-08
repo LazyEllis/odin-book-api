@@ -2,7 +2,7 @@ import { body, param } from "express-validator";
 import { validate } from "../lib/utils.ts";
 import { prisma } from "../lib/prisma.ts";
 
-export const validateUserCreation = validate([
+const nameValidators = [
   body("name")
     .trim()
     .notEmpty()
@@ -20,13 +20,18 @@ export const validateUserCreation = validate([
       "The username can contain only letters, numbers, and underscores",
     )
     .bail()
-    .custom(async (value) => {
+    .custom(async (value, { req }) => {
       const user = await prisma.user.findFirst({
         where: {
           username: {
             equals: value,
             mode: "insensitive",
           },
+          ...(req.user && {
+            NOT: {
+              id: req.user.id,
+            },
+          }),
         },
       });
 
@@ -34,6 +39,10 @@ export const validateUserCreation = validate([
         throw new Error("This email is already in use.");
       }
     }),
+];
+
+export const validateUserCreation = validate([
+  ...nameValidators,
   body("password")
     .isStrongPassword()
     .withMessage(
@@ -42,6 +51,28 @@ export const validateUserCreation = validate([
   body("passwordConfirmation")
     .custom((value, { req }) => req.body.password === value)
     .withMessage("The passwords must match."),
+]);
+
+export const validateUserUpdate = validate([
+  ...nameValidators,
+  body("description")
+    .trim()
+    .default(null)
+    .isLength({ max: 160 })
+    .withMessage("The description must not exceed 160 characters.")
+    .optional({ values: "null" }),
+  body("location")
+    .trim()
+    .default(null)
+    .isLength({ max: 30 })
+    .withMessage("The location must not exceed 30 characters.")
+    .optional({ values: "null" }),
+  body("url")
+    .trim()
+    .default(null)
+    .isURL({ require_protocol: true })
+    .withMessage("The URL must be a valid URL.")
+    .optional({ values: "null" }),
 ]);
 
 export const validateUserId = validate([
