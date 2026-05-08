@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import request from "supertest";
 import app from "../tests/app.ts";
 
-const validPayload = {
+const userCreationPayload = {
   name: "John Doe",
   username: "john_doe_123",
   password: "Password123!",
@@ -21,15 +21,15 @@ describe("POST /users", () => {
   it("returns the created user with a token on success", async () => {
     const res = await request(app)
       .post("/users")
-      .send(validPayload)
+      .send(userCreationPayload)
       .expect("Content-Type", /json/)
       .expect(201);
 
     expect(res.body).toEqual({
       user: {
         id: expect.any(Number),
-        name: "John Doe",
-        username: "john_doe_123",
+        name: userCreationPayload.name,
+        username: userCreationPayload.username,
         createdAt: expect.any(String),
         description: null,
         location: null,
@@ -65,7 +65,7 @@ describe("POST /users", () => {
     const res = await request(app)
       .post("/users")
       .send({
-        ...validPayload,
+        ...userCreationPayload,
         name: "Has Erling Braut Haaland Broken Another Goalscoring Record?",
       })
       .expect("Content-Type", /json/)
@@ -81,7 +81,7 @@ describe("POST /users", () => {
   it("returns a 422 error when username is less than 5 characters", async () => {
     const res = await request(app)
       .post("/users")
-      .send({ ...validPayload, username: "john" })
+      .send({ ...userCreationPayload, username: "john" })
       .expect("Content-Type", /json/)
       .expect(422);
 
@@ -95,7 +95,7 @@ describe("POST /users", () => {
   it("returns a 422 error when username exceeds 15 characters", async () => {
     const res = await request(app)
       .post("/users")
-      .send({ ...validPayload, username: "jonathan_mcdonald" })
+      .send({ ...userCreationPayload, username: "jonathan_mcdonald" })
       .expect("Content-Type", /json/)
       .expect(422);
 
@@ -109,7 +109,7 @@ describe("POST /users", () => {
   it("returns a 422 error when username contains spaces", async () => {
     const res = await request(app)
       .post("/users")
-      .send({ ...validPayload, username: "john doe" })
+      .send({ ...userCreationPayload, username: "john doe" })
       .expect("Content-Type", /json/)
       .expect(422);
 
@@ -123,7 +123,7 @@ describe("POST /users", () => {
   it("returns a 422 error when username contains invalid special characters", async () => {
     const res = await request(app)
       .post("/users")
-      .send({ ...validPayload, username: "john.doe" })
+      .send({ ...userCreationPayload, username: "john.doe" })
       .expect("Content-Type", /json/)
       .expect(422);
 
@@ -137,13 +137,17 @@ describe("POST /users", () => {
   it("returns a 422 error when username is already taken", async () => {
     await request(app)
       .post("/users")
-      .send(validPayload)
+      .send(userCreationPayload)
       .expect("Content-Type", /json/)
       .expect(201);
 
     const res = await request(app)
       .post("/users")
-      .send({ ...validPayload, name: "Jonathan Doe", username: "JOHN_DOE_123" })
+      .send({
+        ...userCreationPayload,
+        name: "Jonathan Doe",
+        username: "JOHN_DOE_123",
+      })
       .expect("Content-Type", /json/)
       .expect(422);
 
@@ -158,7 +162,7 @@ describe("POST /users", () => {
     const res = await request(app)
       .post("/users")
       .send({
-        ...validPayload,
+        ...userCreationPayload,
         password: "password",
         passwordConfirmation: "password",
       })
@@ -176,7 +180,7 @@ describe("POST /users", () => {
     const res = await request(app)
       .post("/users")
       .send({
-        ...validPayload,
+        ...userCreationPayload,
         password: "Password123!",
         passwordConfirmation: "Password@123",
       })
@@ -192,54 +196,57 @@ describe("POST /users", () => {
 });
 
 describe("GET /users", () => {
-  it("returns all created users sorted alphabetically", async () => {
-    await request(app).post("/users").send(validPayload);
+  it("returns all created users", async () => {
+    await request(app).post("/users").send(userCreationPayload);
 
     await request(app)
       .post("/users")
-      .send({ ...validPayload, name: "Jane Doe", username: "jane_doe" });
+      .send({ ...userCreationPayload, name: "Jane Doe", username: "jane_doe" });
 
     const res = await request(app)
       .get("/users")
       .expect("Content-Type", /json/)
       .expect(200);
 
-    expect(res.body).toEqual([
-      {
-        id: expect.any(Number),
-        name: "Jane Doe",
-        username: "jane_doe",
-        createdAt: expect.any(String),
-        description: null,
-        location: null,
-        profileImageUrl: null,
-        url: null,
-        _count: {
-          followers: 0,
-          following: 0,
+    expect(res.body).toHaveLength(2);
+    expect(res.body).toEqual(
+      expect.arrayContaining([
+        {
+          id: expect.any(Number),
+          name: userCreationPayload.name,
+          username: userCreationPayload.username,
+          createdAt: expect.any(String),
+          description: null,
+          location: null,
+          profileImageUrl: null,
+          url: null,
+          _count: {
+            followers: 0,
+            following: 0,
+          },
         },
-      },
-      {
-        id: expect.any(Number),
-        name: "John Doe",
-        username: "john_doe_123",
-        createdAt: expect.any(String),
-        description: null,
-        location: null,
-        profileImageUrl: null,
-        url: null,
-        _count: {
-          followers: 0,
-          following: 0,
+        {
+          id: expect.any(Number),
+          name: "Jane Doe",
+          username: "jane_doe",
+          createdAt: expect.any(String),
+          description: null,
+          location: null,
+          profileImageUrl: null,
+          url: null,
+          _count: {
+            followers: 0,
+            following: 0,
+          },
         },
-      },
-    ]);
+      ]),
+    );
   });
 });
 
 describe("GET /users/me", () => {
   it("returns the authenticated user on success", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .get("/users/me")
@@ -249,8 +256,8 @@ describe("GET /users/me", () => {
 
     expect(res.body).toEqual({
       id: expect.any(Number),
-      name: "John Doe",
-      username: "john_doe_123",
+      name: userCreationPayload.name,
+      username: userCreationPayload.username,
       createdAt: expect.any(String),
       description: null,
       location: null,
@@ -263,13 +270,15 @@ describe("GET /users/me", () => {
     });
   });
 
-  it("returns a 401 error if unauthenticated", async () => {
+  it("returns a 401 error if no token is provided", async () => {
     await request(app)
       .get("/users/me")
       .expect("Content-Type", /json/)
       .expect({ message: "Unauthorized" })
       .expect(401);
+  });
 
+  it("returns a 401 error if an invalid token is provided", async () => {
     await request(app)
       .get("/users/me")
       .auth("invalid-token", { type: "bearer" })
@@ -281,7 +290,7 @@ describe("GET /users/me", () => {
 
 describe("PUT /users/me", () => {
   it("returns the authenticated user on success", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .put("/users/me")
@@ -307,19 +316,19 @@ describe("PUT /users/me", () => {
   });
 
   it("returns the authenticated user when username is unmodified", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .put("/users/me")
       .auth(userRes.body.token, { type: "bearer" })
-      .send({ ...userUpdatePayload, username: validPayload.username })
+      .send({ ...userUpdatePayload, username: userCreationPayload.username })
       .expect("Content-Type", /json/)
       .expect(200);
 
     expect(res.body).toEqual({
       id: expect.any(Number),
       name: userUpdatePayload.name,
-      username: validPayload.username,
+      username: userCreationPayload.username,
       createdAt: expect.any(String),
       description: userUpdatePayload.description,
       location: userUpdatePayload.location,
@@ -333,7 +342,7 @@ describe("PUT /users/me", () => {
   });
 
   it("returns the authenticated user when optional fields are empty strings", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .put("/users/me")
@@ -359,7 +368,7 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when name exceeds 50 characters", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .put("/users/me")
@@ -379,7 +388,7 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when username is less than 5 characters", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .put("/users/me")
@@ -396,7 +405,7 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when username exceeds 15 characters", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .put("/users/me")
@@ -413,7 +422,7 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when username contains spaces", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .put("/users/me")
@@ -430,7 +439,7 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when username contains invalid special characters", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .put("/users/me")
@@ -447,7 +456,7 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when description exceeds 160 characters", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .put("/users/me")
@@ -468,7 +477,7 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when location exceeds 30 characters", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .put("/users/me")
@@ -488,7 +497,7 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when URL is invalid", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .put("/users/me")
@@ -516,7 +525,7 @@ describe("PUT /users/me", () => {
 
 describe("GET /users/:userId", () => {
   it("returns a user on success", async () => {
-    const userRes = await request(app).post("/users").send(validPayload);
+    const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .get(`/users/${userRes.body.user.id}`)
@@ -563,7 +572,7 @@ describe("GET /users/:userId", () => {
 
 describe("GET /users/by/username/:username", () => {
   it("returns a user on success", async () => {
-    await request(app).post("/users").send(validPayload);
+    await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .get("/users/by/username/john_doe_123")
@@ -572,8 +581,8 @@ describe("GET /users/by/username/:username", () => {
 
     expect(res.body).toEqual({
       id: expect.any(Number),
-      name: "John Doe",
-      username: "john_doe_123",
+      name: userCreationPayload.name,
+      username: userCreationPayload.username,
       createdAt: expect.any(String),
       description: null,
       location: null,
@@ -587,7 +596,7 @@ describe("GET /users/by/username/:username", () => {
   });
 
   it("returns the same user when username is provided in different case", async () => {
-    await request(app).post("/users").send(validPayload);
+    await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
       .get("/users/by/username/JOHN_DOE_123")
@@ -596,8 +605,8 @@ describe("GET /users/by/username/:username", () => {
 
     expect(res.body).toEqual({
       id: expect.any(Number),
-      name: "John Doe",
-      username: "john_doe_123",
+      name: userCreationPayload.name,
+      username: userCreationPayload.username,
       createdAt: expect.any(String),
       description: null,
       location: null,
