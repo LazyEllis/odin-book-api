@@ -5,6 +5,7 @@ import "./lib/passport.ts";
 import { errorHandler } from "./lib/errorHandler.ts";
 import userRouter from "./routes/userRouter.ts";
 import authRouter from "./routes/authRouter.ts";
+import postRouter from "./routes/postRouter.ts";
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(cors({ origin: process.env.FRONTEND_URL }));
 
 app.use("/users", userRouter);
 app.use("/auth", authRouter);
+app.use("/posts", postRouter);
 
 app.use(errorHandler);
 
