@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
-import { UnauthorizedError } from "../lib/errors.js";
+import { UnauthorizedError } from "../lib/errors.ts";
 import type { IVerifyOptions } from "passport-local";
 
 export const generateToken: RequestHandler = (req, res, next) => {
