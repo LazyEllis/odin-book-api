@@ -2,6 +2,7 @@ import { Router } from "express";
 import { requireAuth } from "../lib/auth.ts";
 import {
   createPost,
+  deletePost,
   getPostById,
   listPosts,
 } from "../controllers/postController.ts";
@@ -14,5 +15,7 @@ postRouter.get("/", listPosts);
 postRouter.post("/", requireAuth, validatePost, createPost);
 
 postRouter.get("/:postId", validatePostId, getPostById);
+
+postRouter.delete("/:postId", requireAuth, validatePostId, deletePost);
 
 export default postRouter;

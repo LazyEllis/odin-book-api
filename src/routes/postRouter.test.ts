@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest";
 import request from "supertest";
 import app from "../tests/app.ts";
 
-const setup = async () => {
+const setup = async ({ username = "john_doe_123" } = {}) => {
   const res = await request(app).post("/users").send({
     name: "John Doe",
-    username: "john_doe_123",
+    username,
     password: "Password123!",
     passwordConfirmation: "Password123!",
   });
@@ -441,5 +441,75 @@ describe("GET /posts/:postId", () => {
         expect.objectContaining({ path: "postId" }),
       ]),
     });
+  });
+});
+
+describe("DELETE /posts/:postId", () => {
+  it("returns a 204 status on success", async () => {
+    const { token } = await setup();
+
+    const postRes = await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This is my first post" });
+
+    await request(app)
+      .delete(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" })
+      .expect(204);
+
+    await request(app).get("/posts").expect([]);
+  });
+
+  it("returns a 404 error if the post doesn't exist", async () => {
+    const { token } = await setup();
+
+    await request(app)
+      .delete("/posts/1")
+      .auth(token, { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect({ message: "Post not found" })
+      .expect(404);
+  });
+
+  it("returns a 403 error if the authenticated user is not the post's author", async () => {
+    const { token: authorToken } = await setup();
+    const { token } = await setup({ username: "jane_doe_123" });
+
+    const postRes = await request(app)
+      .post("/posts")
+      .auth(authorToken, { type: "bearer" })
+      .send({ text: "This is my first post" });
+
+    await request(app)
+      .delete(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect({ message: "You don't have permission to delete this post" })
+      .expect(403);
+  });
+
+  it("returns a 422 error if the post ID is not an integer", async () => {
+    const { token } = await setup();
+
+    const res = await request(app)
+      .delete("/posts/1.5")
+      .auth(token, { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "postId" }),
+      ]),
+    });
+  });
+
+  it("returns a 401 error if unauthenticated", async () => {
+    await request(app)
+      .delete("/posts/1")
+      .expect("Content-Type", /json/)
+      .expect({ message: "Unauthorized" })
+      .expect(401);
   });
 });
