@@ -1,4 +1,4 @@
-import { body } from "express-validator";
+import { body, param } from "express-validator";
 import { validate } from "../lib/utils.ts";
 import { prisma } from "../lib/prisma.ts";
 
@@ -45,4 +45,8 @@ export const validatePost = validate([
       }
     })
     .optional({ values: "null" }),
+]);
+
+export const validatePostId = validate([
+  param("postId").isInt().withMessage("The post ID must be an integer").toInt(),
 ]);

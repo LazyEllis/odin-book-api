@@ -310,3 +310,136 @@ describe("POST /posts", () => {
       .expect(401);
   });
 });
+
+describe("GET /posts", () => {
+  it("returns all created posts", async () => {
+    const { user, token } = await setup();
+
+    await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This is my first post" });
+
+    await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This is another post" });
+
+    const res = await request(app)
+      .get("/posts")
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual(
+      expect.arrayContaining([
+        {
+          id: expect.any(Number),
+          text: "This is my first post",
+          attachment: null,
+          createdAt: expect.any(String),
+          author: {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            profileImageUrl: user.profileImageUrl,
+          },
+          pinnedById: null,
+          conversationId: null,
+          repliedTo: null,
+          quotedPost: null,
+          _count: {
+            reposts: 0,
+            replies: 0,
+            likes: 0,
+            quotes: 0,
+            bookmarks: 0,
+          },
+        },
+        {
+          id: expect.any(Number),
+          text: "This is another post",
+          attachment: null,
+          createdAt: expect.any(String),
+          author: {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            profileImageUrl: user.profileImageUrl,
+          },
+          pinnedById: null,
+          conversationId: null,
+          repliedTo: null,
+          quotedPost: null,
+          _count: {
+            reposts: 0,
+            replies: 0,
+            likes: 0,
+            quotes: 0,
+            bookmarks: 0,
+          },
+        },
+      ]),
+    );
+  });
+});
+
+describe("GET /posts/:postId", () => {
+  it("returns a post on success", async () => {
+    const { user, token } = await setup();
+
+    const postRes = await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This is my first post" });
+
+    const res = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      id: expect.any(Number),
+      text: "This is my first post",
+      attachment: null,
+      createdAt: expect.any(String),
+      author: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        profileImageUrl: user.profileImageUrl,
+      },
+      pinnedById: null,
+      conversationId: null,
+      repliedTo: null,
+      quotedPost: null,
+      _count: {
+        reposts: 0,
+        replies: 0,
+        likes: 0,
+        quotes: 0,
+        bookmarks: 0,
+      },
+    });
+  });
+
+  it("returns a 404 error if the post doesn't exist", async () => {
+    await request(app)
+      .get("/posts/1")
+      .expect("Content-Type", /json/)
+      .expect({ message: "Post not found" })
+      .expect(404);
+  });
+
+  it("returns a 422 error if the post ID is not an integer", async () => {
+    const res = await request(app)
+      .get("/posts/1.5")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "postId" }),
+      ]),
+    });
+  });
+});
