@@ -1,66 +1,11 @@
 import type { RequestHandler } from "express";
 import { prisma } from "../lib/prisma.ts";
-import { getAuthenticatedUser } from "../lib/utils.ts";
+import { getAuthenticatedUser, postFields } from "../lib/utils.ts";
 import { ForbiddenError, NotFoundError } from "../lib/errors.ts";
 
 export const listPosts: RequestHandler = async (req, res) => {
   const posts = await prisma.post.findMany({
-    omit: {
-      authorId: true,
-      inReplyToPostId: true,
-      quotedPostId: true,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          profileImageUrl: true,
-        },
-      },
-      repliedTo: {
-        select: {
-          id: true,
-          text: true,
-          attachment: true,
-          createdAt: true,
-          author: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              profileImageUrl: true,
-            },
-          },
-        },
-      },
-      quotedPost: {
-        select: {
-          id: true,
-          text: true,
-          attachment: true,
-          createdAt: true,
-          author: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              profileImageUrl: true,
-            },
-          },
-        },
-      },
-      _count: {
-        select: {
-          reposts: true,
-          replies: true,
-          likes: true,
-          quotes: true,
-          bookmarks: true,
-        },
-      },
-    },
+    ...postFields,
     orderBy: {
       createdAt: "desc",
     },
@@ -73,72 +18,17 @@ export const createPost: RequestHandler = async (req, res) => {
   const { id } = getAuthenticatedUser(req.user);
   const { text, inReplyToPostId, quotedPostId } = req.body;
 
-  const user = await prisma.post.create({
+  const post = await prisma.post.create({
     data: {
       text,
       authorId: id,
       inReplyToPostId,
       quotedPostId,
     },
-    omit: {
-      authorId: true,
-      inReplyToPostId: true,
-      quotedPostId: true,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          profileImageUrl: true,
-        },
-      },
-      repliedTo: {
-        select: {
-          id: true,
-          text: true,
-          attachment: true,
-          createdAt: true,
-          author: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              profileImageUrl: true,
-            },
-          },
-        },
-      },
-      quotedPost: {
-        select: {
-          id: true,
-          text: true,
-          attachment: true,
-          createdAt: true,
-          author: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              profileImageUrl: true,
-            },
-          },
-        },
-      },
-      _count: {
-        select: {
-          reposts: true,
-          replies: true,
-          likes: true,
-          quotes: true,
-          bookmarks: true,
-        },
-      },
-    },
+    ...postFields,
   });
 
-  res.status(201).json(user);
+  res.status(201).json(post);
 };
 
 export const getPostById: RequestHandler = async (req, res) => {
@@ -148,62 +38,7 @@ export const getPostById: RequestHandler = async (req, res) => {
     where: {
       id: Number(postId),
     },
-    omit: {
-      authorId: true,
-      inReplyToPostId: true,
-      quotedPostId: true,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          profileImageUrl: true,
-        },
-      },
-      repliedTo: {
-        select: {
-          id: true,
-          text: true,
-          attachment: true,
-          createdAt: true,
-          author: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              profileImageUrl: true,
-            },
-          },
-        },
-      },
-      quotedPost: {
-        select: {
-          id: true,
-          text: true,
-          attachment: true,
-          createdAt: true,
-          author: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              profileImageUrl: true,
-            },
-          },
-        },
-      },
-      _count: {
-        select: {
-          reposts: true,
-          replies: true,
-          likes: true,
-          quotes: true,
-          bookmarks: true,
-        },
-      },
-    },
+    ...postFields,
   });
 
   if (!post) {

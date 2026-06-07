@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma.ts";
 import { NotFoundError } from "../lib/errors.ts";
-import { getAuthenticatedUser } from "../lib/utils.ts";
+import { getAuthenticatedUser, postFields } from "../lib/utils.ts";
 
 export const listUsers: RequestHandler = async (req, res) => {
   const users = await prisma.user.findMany({
@@ -183,62 +183,7 @@ export const listCurrentUserPosts: RequestHandler = async (req, res) => {
     where: {
       authorId: id,
     },
-    omit: {
-      authorId: true,
-      inReplyToPostId: true,
-      quotedPostId: true,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          profileImageUrl: true,
-        },
-      },
-      repliedTo: {
-        select: {
-          id: true,
-          text: true,
-          attachment: true,
-          createdAt: true,
-          author: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              profileImageUrl: true,
-            },
-          },
-        },
-      },
-      quotedPost: {
-        select: {
-          id: true,
-          text: true,
-          attachment: true,
-          createdAt: true,
-          author: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              profileImageUrl: true,
-            },
-          },
-        },
-      },
-      _count: {
-        select: {
-          reposts: true,
-          replies: true,
-          likes: true,
-          quotes: true,
-          bookmarks: true,
-        },
-      },
-    },
+    ...postFields,
     orderBy: {
       createdAt: "desc",
     },
@@ -264,62 +209,7 @@ export const listUserPosts: RequestHandler = async (req, res) => {
     where: {
       authorId: Number(userId),
     },
-    omit: {
-      authorId: true,
-      inReplyToPostId: true,
-      quotedPostId: true,
-    },
-    include: {
-      author: {
-        select: {
-          id: true,
-          name: true,
-          username: true,
-          profileImageUrl: true,
-        },
-      },
-      repliedTo: {
-        select: {
-          id: true,
-          text: true,
-          attachment: true,
-          createdAt: true,
-          author: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              profileImageUrl: true,
-            },
-          },
-        },
-      },
-      quotedPost: {
-        select: {
-          id: true,
-          text: true,
-          attachment: true,
-          createdAt: true,
-          author: {
-            select: {
-              id: true,
-              name: true,
-              username: true,
-              profileImageUrl: true,
-            },
-          },
-        },
-      },
-      _count: {
-        select: {
-          reposts: true,
-          replies: true,
-          likes: true,
-          quotes: true,
-          bookmarks: true,
-        },
-      },
-    },
+    ...postFields,
     orderBy: {
       createdAt: "desc",
     },
