@@ -4,6 +4,8 @@ import {
   getCurrentUser,
   getUserById,
   getUserByUsername,
+  listCurrentUserPosts,
+  listUserPosts,
   listUsers,
   updateCurrentUser,
 } from "../controllers/userControllers.ts";
@@ -24,7 +26,11 @@ userRouter.get("/me", requireAuth, getCurrentUser);
 
 userRouter.put("/me", requireAuth, validateUserUpdate, updateCurrentUser);
 
+userRouter.get("/me/posts", requireAuth, listCurrentUserPosts);
+
 userRouter.get("/:userId", validateUserId, getUserById);
+
+userRouter.get("/:userId/posts", validateUserId, listUserPosts);
 
 userRouter.get("/by/username/:username", getUserByUsername);
 

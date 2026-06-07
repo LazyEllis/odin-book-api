@@ -175,3 +175,155 @@ export const getUserByUsername: RequestHandler = async (req, res) => {
 
   res.json(user);
 };
+
+export const listCurrentUserPosts: RequestHandler = async (req, res) => {
+  const { id } = getAuthenticatedUser(req.user);
+
+  const posts = await prisma.post.findMany({
+    where: {
+      authorId: id,
+    },
+    omit: {
+      authorId: true,
+      inReplyToPostId: true,
+      quotedPostId: true,
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          profileImageUrl: true,
+        },
+      },
+      repliedTo: {
+        select: {
+          id: true,
+          text: true,
+          attachment: true,
+          createdAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              profileImageUrl: true,
+            },
+          },
+        },
+      },
+      quotedPost: {
+        select: {
+          id: true,
+          text: true,
+          attachment: true,
+          createdAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              profileImageUrl: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          reposts: true,
+          replies: true,
+          likes: true,
+          quotes: true,
+          bookmarks: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  res.json(posts);
+};
+
+export const listUserPosts: RequestHandler = async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: Number(userId),
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  const posts = await prisma.post.findMany({
+    where: {
+      authorId: Number(userId),
+    },
+    omit: {
+      authorId: true,
+      inReplyToPostId: true,
+      quotedPostId: true,
+    },
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          profileImageUrl: true,
+        },
+      },
+      repliedTo: {
+        select: {
+          id: true,
+          text: true,
+          attachment: true,
+          createdAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              profileImageUrl: true,
+            },
+          },
+        },
+      },
+      quotedPost: {
+        select: {
+          id: true,
+          text: true,
+          attachment: true,
+          createdAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              profileImageUrl: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          reposts: true,
+          replies: true,
+          likes: true,
+          quotes: true,
+          bookmarks: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  res.json(posts);
+};

@@ -627,3 +627,139 @@ describe("GET /users/by/username/:username", () => {
       .expect(404);
   });
 });
+
+describe("GET /users/me/posts", () => {
+  it("returns the authenticated user's posts on success", async () => {
+    const userRes = await request(app).post("/users").send(userCreationPayload);
+
+    const { user, token } = userRes.body;
+
+    const otherUserRes = await request(app)
+      .post("/users")
+      .send({ ...userCreationPayload, name: "Jane Doe", username: "jane_doe" });
+
+    await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This is my first post." });
+
+    await request(app)
+      .post("/posts")
+      .auth(otherUserRes.body.token, { type: "bearer" })
+      .send({ text: "This is a post from another user." });
+
+    const res = await request(app)
+      .get("/users/me/posts")
+      .auth(userRes.body.token, { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual([
+      {
+        id: expect.any(Number),
+        text: "This is my first post.",
+        attachment: null,
+        createdAt: expect.any(String),
+        author: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          profileImageUrl: user.profileImageUrl,
+        },
+        pinnedById: null,
+        conversationId: null,
+        repliedTo: null,
+        quotedPost: null,
+        _count: {
+          reposts: 0,
+          replies: 0,
+          likes: 0,
+          quotes: 0,
+          bookmarks: 0,
+        },
+      },
+    ]);
+  });
+
+  it("returns a 401 error if unauthenticated", async () => {
+    await request(app)
+      .get("/users/me/posts")
+      .expect("Content-Type", /json/)
+      .expect({ message: "Unauthorized" })
+      .expect(401);
+  });
+});
+
+describe("GET /users/:userId/posts", () => {
+  it("returns a user's posts on success", async () => {
+    const userRes = await request(app).post("/users").send(userCreationPayload);
+
+    const otherUserRes = await request(app)
+      .post("/users")
+      .send({ ...userCreationPayload, name: "Jane Doe", username: "jane_doe" });
+
+    const { user, token } = otherUserRes.body;
+
+    await request(app)
+      .post("/posts")
+      .auth(userRes.body.token, { type: "bearer" })
+      .send({ text: "This is my first post." });
+
+    await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This is a post from another user." });
+
+    const res = await request(app)
+      .get(`/users/${user.id}/posts`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual([
+      {
+        id: expect.any(Number),
+        text: "This is a post from another user.",
+        attachment: null,
+        createdAt: expect.any(String),
+        author: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          profileImageUrl: user.profileImageUrl,
+        },
+        pinnedById: null,
+        conversationId: null,
+        repliedTo: null,
+        quotedPost: null,
+        _count: {
+          reposts: 0,
+          replies: 0,
+          likes: 0,
+          quotes: 0,
+          bookmarks: 0,
+        },
+      },
+    ]);
+  });
+
+  it("returns a 404 error if the user doesn't exist", async () => {
+    await request(app)
+      .get("/users/1/posts")
+      .expect("Content-Type", /json/)
+      .expect({ message: "User not found" })
+      .expect(404);
+  });
+
+  it("returns a 422 error if the user ID isn't an integer", async () => {
+    const res = await request(app)
+      .get("/users/1.5/posts")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "userId" }),
+      ]),
+    });
+  });
+});
