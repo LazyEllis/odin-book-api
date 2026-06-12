@@ -513,3 +513,171 @@ describe("DELETE /posts/:postId", () => {
       .expect(401);
   });
 });
+
+describe("GET /posts/:postId/replies", () => {
+  it("returns all replies of a post", async () => {
+    const { user, token } = await setup();
+
+    const postRes = await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This is my first post" });
+
+    await request(app).post("/posts").auth(token, { type: "bearer" }).send({
+      text: "This is a reply to my first post",
+      inReplyToPostId: postRes.body.id,
+    });
+
+    await request(app).post("/posts").auth(token, { type: "bearer" }).send({
+      text: "This quotes my first post",
+      quotedPostId: postRes.body.id,
+    });
+
+    const repliesRes = await request(app)
+      .get(`/posts/${postRes.body.id}/replies`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(repliesRes.body).toEqual([
+      {
+        id: expect.any(Number),
+        text: "This is a reply to my first post",
+        attachment: null,
+        createdAt: expect.any(String),
+        author: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          profileImageUrl: user.profileImageUrl,
+        },
+        pinnedById: null,
+        conversationId: null,
+        repliedTo: {
+          id: postRes.body.id,
+          text: "This is my first post",
+          attachment: null,
+          createdAt: expect.any(String),
+          author: {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            profileImageUrl: user.profileImageUrl,
+          },
+        },
+        quotedPost: null,
+        _count: {
+          reposts: 0,
+          replies: 0,
+          likes: 0,
+          quotes: 0,
+          bookmarks: 0,
+        },
+      },
+    ]);
+  });
+
+  it("returns a 404 error if the post doesn't exist", async () => {
+    await request(app)
+      .get("/posts/1/replies")
+      .expect("Content-Type", /json/)
+      .expect({ message: "Post not found" })
+      .expect(404);
+  });
+
+  it("returns a 422 error if the post ID is not an integer", async () => {
+    const res = await request(app)
+      .get("/posts/1.5/replies")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "postId" }),
+      ]),
+    });
+  });
+});
+
+describe("GET /posts/:postId/quotes", () => {
+  it("returns all quotes of a post", async () => {
+    const { user, token } = await setup();
+
+    const postRes = await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This is my first post" });
+
+    await request(app).post("/posts").auth(token, { type: "bearer" }).send({
+      text: "This is a reply to my first post",
+      inReplyToPostId: postRes.body.id,
+    });
+
+    await request(app).post("/posts").auth(token, { type: "bearer" }).send({
+      text: "This quotes my first post",
+      quotedPostId: postRes.body.id,
+    });
+
+    const quotesRes = await request(app)
+      .get(`/posts/${postRes.body.id}/quotes`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(quotesRes.body).toEqual([
+      {
+        id: expect.any(Number),
+        text: "This quotes my first post",
+        attachment: null,
+        createdAt: expect.any(String),
+        author: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          profileImageUrl: user.profileImageUrl,
+        },
+        pinnedById: null,
+        conversationId: null,
+        repliedTo: null,
+        quotedPost: {
+          id: postRes.body.id,
+          text: "This is my first post",
+          attachment: null,
+          createdAt: expect.any(String),
+          author: {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            profileImageUrl: user.profileImageUrl,
+          },
+        },
+        _count: {
+          reposts: 0,
+          replies: 0,
+          likes: 0,
+          quotes: 0,
+          bookmarks: 0,
+        },
+      },
+    ]);
+  });
+
+  it("returns a 404 error if the post doesn't exist", async () => {
+    await request(app)
+      .get("/posts/1/quotes")
+      .expect("Content-Type", /json/)
+      .expect({ message: "Post not found" })
+      .expect(404);
+  });
+
+  it("returns a 422 error if the post ID is not an integer", async () => {
+    const res = await request(app)
+      .get("/posts/1.5/quotes")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "postId" }),
+      ]),
+    });
+  });
+});

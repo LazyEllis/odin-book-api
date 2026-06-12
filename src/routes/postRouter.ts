@@ -4,6 +4,8 @@ import {
   createPost,
   deletePost,
   getPostById,
+  listPostQuotes,
+  listPostReplies,
   listPosts,
 } from "../controllers/postController.ts";
 import { validatePost, validatePostId } from "../validators/postValidators.ts";
@@ -17,5 +19,9 @@ postRouter.post("/", requireAuth, validatePost, createPost);
 postRouter.get("/:postId", validatePostId, getPostById);
 
 postRouter.delete("/:postId", requireAuth, validatePostId, deletePost);
+
+postRouter.get("/:postId/replies", validatePostId, listPostReplies);
+
+postRouter.get("/:postId/quotes", validatePostId, listPostQuotes);
 
 export default postRouter;

@@ -74,3 +74,49 @@ export const deletePost: RequestHandler = async (req, res) => {
 
   res.status(204).end();
 };
+
+export const listPostReplies: RequestHandler = async (req, res) => {
+  const { postId } = req.params;
+
+  const post = await prisma.post.findUnique({
+    where: {
+      id: Number(postId),
+    },
+  });
+
+  if (!post) {
+    throw new NotFoundError("Post not found");
+  }
+
+  const posts = await prisma.post.findMany({
+    where: {
+      inReplyToPostId: Number(postId),
+    },
+    ...postFields,
+  });
+
+  res.json(posts);
+};
+
+export const listPostQuotes: RequestHandler = async (req, res) => {
+  const { postId } = req.params;
+
+  const post = await prisma.post.findUnique({
+    where: {
+      id: Number(postId),
+    },
+  });
+
+  if (!post) {
+    throw new NotFoundError("Post not found");
+  }
+
+  const posts = await prisma.post.findMany({
+    where: {
+      quotedPostId: Number(postId),
+    },
+    ...postFields,
+  });
+
+  res.json(posts);
+};
