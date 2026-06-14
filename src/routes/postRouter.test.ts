@@ -507,7 +507,7 @@ describe("GET /posts/:postId", () => {
 });
 
 describe("DELETE /posts/:postId", () => {
-  it("returns a 204 status on success", async () => {
+  it("deletes a post on success", async () => {
     const { token } = await setup();
 
     const postRes = await request(app)
