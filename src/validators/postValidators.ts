@@ -13,7 +13,7 @@ export const validatePost = validate([
     .withMessage("The inReplyToPostId must be an integer.")
     .toInt()
     .bail()
-    .custom(async (value) => {
+    .custom(async (value, { req }) => {
       const post = await prisma.post.findUnique({
         where: {
           id: value,
@@ -23,6 +23,8 @@ export const validatePost = validate([
       if (!post) {
         throw new Error("The replied-to post does not exist.");
       }
+
+      req.res.locals.conversationId = post.conversationId ?? post.id;
     })
     .optional({ values: "null" }),
   body("quotedPostId")

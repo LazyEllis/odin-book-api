@@ -17,12 +17,14 @@ export const listPosts: RequestHandler = async (req, res) => {
 export const createPost: RequestHandler = async (req, res) => {
   const { id } = getAuthenticatedUser(req.user);
   const { text, inReplyToPostId, quotedPostId } = req.body;
+  const { conversationId } = res.locals;
 
   const post = await prisma.post.create({
     data: {
       text,
       authorId: id,
       inReplyToPostId,
+      conversationId,
       quotedPostId,
     },
     ...postFields,

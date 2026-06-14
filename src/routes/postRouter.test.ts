@@ -79,7 +79,7 @@ describe("POST /posts", () => {
         profileImageUrl: user.profileImageUrl,
       },
       pinnedById: null,
-      conversationId: null,
+      conversationId: postRes.body.id,
       repliedTo: {
         id: postRes.body.id,
         text: "This is my first post.",
@@ -191,7 +191,7 @@ describe("POST /posts", () => {
         profileImageUrl: user.profileImageUrl,
       },
       pinnedById: null,
-      conversationId: null,
+      conversationId: postRes.body.id,
       repliedTo: {
         id: postRes.body.id,
         text: "This is my first post.",
@@ -216,6 +216,68 @@ describe("POST /posts", () => {
           profileImageUrl: user.profileImageUrl,
         },
       },
+      _count: {
+        reposts: 0,
+        replies: 0,
+        likes: 0,
+        quotes: 0,
+        bookmarks: 0,
+      },
+    });
+  });
+
+  it("maintains the root conversation ID on nested replies", async () => {
+    const { user, token } = await setup();
+
+    const postRes = await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This is my first post." });
+
+    const replyRes = await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({
+        text: "This post is a reply to my first post.",
+        inReplyToPostId: postRes.body.id,
+      });
+
+    const res = await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({
+        text: "This is a nested reply.",
+        inReplyToPostId: replyRes.body.id,
+      })
+      .expect("Content-Type", /json/)
+      .expect(201);
+
+    expect(res.body).toEqual({
+      id: expect.any(Number),
+      text: "This is a nested reply.",
+      attachment: null,
+      createdAt: expect.any(String),
+      author: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        profileImageUrl: user.profileImageUrl,
+      },
+      pinnedById: null,
+      conversationId: postRes.body.id,
+      repliedTo: {
+        id: replyRes.body.id,
+        text: "This post is a reply to my first post.",
+        attachment: null,
+        createdAt: expect.any(String),
+        author: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          profileImageUrl: user.profileImageUrl,
+        },
+      },
+      quotedPost: null,
       _count: {
         reposts: 0,
         replies: 0,
@@ -551,7 +613,7 @@ describe("GET /posts/:postId/replies", () => {
           profileImageUrl: user.profileImageUrl,
         },
         pinnedById: null,
-        conversationId: null,
+        conversationId: postRes.body.id,
         repliedTo: {
           id: postRes.body.id,
           text: "This is my first post",
