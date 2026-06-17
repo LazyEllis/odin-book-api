@@ -1,17 +1,7 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
 import app from "../tests/app.ts";
-
-const createUser = async ({ username = "john_doe_123" } = {}) => {
-  const res = await request(app).post("/users").send({
-    name: "John Doe",
-    username,
-    password: "Password123!",
-    passwordConfirmation: "Password123!",
-  });
-
-  return res.body;
-};
+import { createUser } from "../tests/fixtures.ts";
 
 describe("GET /users/me/bookmarks", () => {
   it("returns all bookmarked posts on success", async () => {
@@ -86,7 +76,7 @@ describe("PUT /users/me/bookmarks/:postId", () => {
     expect(bookmarkedPostRes.body._count.bookmarks).toBe(1);
   });
 
-  it("is idempotent when bookmark an already bookmarked post", async () => {
+  it("is idempotent when bookmarking an already bookmarked post", async () => {
     const { token } = await createUser();
 
     const postRes = await request(app)

@@ -1,17 +1,7 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
 import app from "../tests/app.ts";
-
-const createUser = async ({ username = "john_doe_123" } = {}) => {
-  const res = await request(app).post("/users").send({
-    name: "John Doe",
-    username,
-    password: "Password123!",
-    passwordConfirmation: "Password123!",
-  });
-
-  return res.body;
-};
+import { createUser } from "../tests/fixtures.ts";
 
 describe("PUT /users/me/pinned_post/:postId", () => {
   it("pins a post on success", async () => {

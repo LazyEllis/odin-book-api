@@ -1,21 +1,11 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
 import app from "../tests/app.ts";
-
-const setup = async ({ username = "john_doe_123" } = {}) => {
-  const res = await request(app).post("/users").send({
-    name: "John Doe",
-    username,
-    password: "Password123!",
-    passwordConfirmation: "Password123!",
-  });
-
-  return res.body;
-};
+import { createUser } from "../tests/fixtures.ts";
 
 describe("POST /posts", () => {
   it("returns the created post on success", async () => {
-    const { user, token } = await setup();
+    const { user, token } = await createUser();
 
     const res = await request(app)
       .post("/posts")
@@ -50,7 +40,7 @@ describe("POST /posts", () => {
   });
 
   it("returns the created reply on success", async () => {
-    const { user, token } = await setup();
+    const { user, token } = await createUser();
 
     const postRes = await request(app)
       .post("/posts")
@@ -104,7 +94,7 @@ describe("POST /posts", () => {
   });
 
   it("returns the created quote on success", async () => {
-    const { user, token } = await setup();
+    const { user, token } = await createUser();
 
     const postRes = await request(app)
       .post("/posts")
@@ -158,7 +148,7 @@ describe("POST /posts", () => {
   });
 
   it("returns the created reply that quotes a post on success", async () => {
-    const { user, token } = await setup();
+    const { user, token } = await createUser();
 
     const postRes = await request(app)
       .post("/posts")
@@ -227,7 +217,7 @@ describe("POST /posts", () => {
   });
 
   it("maintains the root conversation ID on nested replies", async () => {
-    const { user, token } = await setup();
+    const { user, token } = await createUser();
 
     const postRes = await request(app)
       .post("/posts")
@@ -289,7 +279,7 @@ describe("POST /posts", () => {
   });
 
   it("returns a 422 error if the text is empty", async () => {
-    const { token } = await setup();
+    const { token } = await createUser();
 
     const res = await request(app)
       .post("/posts")
@@ -306,7 +296,7 @@ describe("POST /posts", () => {
   });
 
   it("returns a 422 error if the replied-to post does not exist", async () => {
-    const { token } = await setup();
+    const { token } = await createUser();
 
     const res = await request(app)
       .post("/posts")
@@ -323,7 +313,7 @@ describe("POST /posts", () => {
   });
 
   it("returns a 422 error if the quoted post does not exist", async () => {
-    const { token } = await setup();
+    const { token } = await createUser();
 
     const res = await request(app)
       .post("/posts")
@@ -340,7 +330,7 @@ describe("POST /posts", () => {
   });
 
   it("returns a 422 error if a post quotes and replies to the same post", async () => {
-    const { token } = await setup();
+    const { token } = await createUser();
 
     const postRes = await request(app)
       .post("/posts")
@@ -375,7 +365,7 @@ describe("POST /posts", () => {
 
 describe("GET /posts", () => {
   it("returns all created posts", async () => {
-    const { user, token } = await setup();
+    const { user, token } = await createUser();
 
     await request(app)
       .post("/posts")
@@ -447,7 +437,7 @@ describe("GET /posts", () => {
 
 describe("GET /posts/:postId", () => {
   it("returns a post on success", async () => {
-    const { user, token } = await setup();
+    const { user, token } = await createUser();
 
     const postRes = await request(app)
       .post("/posts")
@@ -508,7 +498,7 @@ describe("GET /posts/:postId", () => {
 
 describe("DELETE /posts/:postId", () => {
   it("deletes a post on success", async () => {
-    const { token } = await setup();
+    const { token } = await createUser();
 
     const postRes = await request(app)
       .post("/posts")
@@ -524,7 +514,7 @@ describe("DELETE /posts/:postId", () => {
   });
 
   it("returns a 404 error if the post doesn't exist", async () => {
-    const { token } = await setup();
+    const { token } = await createUser();
 
     await request(app)
       .delete("/posts/1")
@@ -535,8 +525,8 @@ describe("DELETE /posts/:postId", () => {
   });
 
   it("returns a 403 error if the authenticated user is not the post's author", async () => {
-    const { token: authorToken } = await setup();
-    const { token } = await setup({ username: "jane_doe_123" });
+    const { token: authorToken } = await createUser();
+    const { token } = await createUser({ username: "jane_doe_123" });
 
     const postRes = await request(app)
       .post("/posts")
@@ -552,7 +542,7 @@ describe("DELETE /posts/:postId", () => {
   });
 
   it("returns a 422 error if the post ID is not an integer", async () => {
-    const { token } = await setup();
+    const { token } = await createUser();
 
     const res = await request(app)
       .delete("/posts/1.5")
@@ -578,7 +568,7 @@ describe("DELETE /posts/:postId", () => {
 
 describe("GET /posts/:postId/replies", () => {
   it("returns all replies of a post", async () => {
-    const { user, token } = await setup();
+    const { user, token } = await createUser();
 
     const postRes = await request(app)
       .post("/posts")
@@ -662,7 +652,7 @@ describe("GET /posts/:postId/replies", () => {
 
 describe("GET /posts/:postId/quotes", () => {
   it("returns all quotes of a post", async () => {
-    const { user, token } = await setup();
+    const { user, token } = await createUser();
 
     const postRes = await request(app)
       .post("/posts")

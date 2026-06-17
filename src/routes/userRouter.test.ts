@@ -1,21 +1,7 @@
 import { describe, it, expect } from "vitest";
 import request from "supertest";
 import app from "../tests/app.ts";
-
-const userCreationPayload = {
-  name: "John Doe",
-  username: "john_doe_123",
-  password: "Password123!",
-  passwordConfirmation: "Password123!",
-};
-
-const userUpdatePayload = {
-  name: "Jonathan Doe",
-  username: "jonathan_doe",
-  description: "I'm just a silly guy that likes computer science.",
-  location: "Somewhere",
-  url: "https://jonathandoe.com",
-};
+import { userCreationPayload, userUpdatePayload } from "../tests/fixtures.ts";
 
 describe("POST /users", () => {
   it("returns the created user with a token on success", async () => {
