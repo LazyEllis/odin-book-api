@@ -733,3 +733,53 @@ describe("GET /posts/:postId/quotes", () => {
     });
   });
 });
+
+describe("GET /posts/:postId/reposted_by", () => {
+  it("returns a list of users that have reposted a post on success", async () => {
+    const { token, user } = await createUser();
+    const { token: reposterToken, user: reposter } = await createUser({
+      username: "jane_doe",
+    });
+
+    const postRes = await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This post has been reposted" });
+
+    await request(app)
+      .put(`/users/me/reposts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
+
+    await request(app)
+      .put(`/users/me/reposts/${postRes.body.id}`)
+      .auth(reposterToken, { type: "bearer" });
+
+    const res = await request(app)
+      .get(`/posts/${postRes.body.id}/reposted_by`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual(expect.arrayContaining([user, reposter]));
+  });
+
+  it("returns a 404 error if the post doesn't exist", async () => {
+    await request(app)
+      .get("/posts/1/reposted_by")
+      .expect("Content-Type", /json/)
+      .expect({ message: "Post not found" })
+      .expect(404);
+  });
+
+  it("returns a 422 error if the post ID is not an integer", async () => {
+    const res = await request(app)
+      .get("/posts/1.5/reposted_by")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "postId" }),
+      ]),
+    });
+  });
+});

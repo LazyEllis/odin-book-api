@@ -6,6 +6,7 @@ import {
   getPostById,
   listPostQuotes,
   listPostReplies,
+  listPostReposters,
   listPosts,
 } from "../controllers/postController.ts";
 import { validatePost, validatePostId } from "../validators/postValidators.ts";
@@ -23,5 +24,7 @@ postRouter.delete("/:postId", requireAuth, validatePostId, deletePost);
 postRouter.get("/:postId/replies", validatePostId, listPostReplies);
 
 postRouter.get("/:postId/quotes", validatePostId, listPostQuotes);
+
+postRouter.get("/:postId/reposted_by", validatePostId, listPostReposters);
 
 export default postRouter;
