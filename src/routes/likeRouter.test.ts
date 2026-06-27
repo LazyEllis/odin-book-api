@@ -74,7 +74,7 @@ describe("PUT /users/me/likes/:postId", () => {
     expect(likedPostRes.body._count.likes).toBe(1);
   });
 
-  it("is idempotent when bookmarking an already liked post", async () => {
+  it("is idempotent when liking an already liked post", async () => {
     const { token } = await createUser();
 
     const postRes = await request(app)
@@ -156,7 +156,7 @@ describe("DELETE /users/me/likes/:postId", () => {
     expect(likedPostRes.body._count.likes).toBe(0);
   });
 
-  it("is idempotent when removing a like from a post that hasn't been liked", async () => {
+  it("is idempotent when unliking a post that hasn't been liked", async () => {
     const { token } = await createUser();
 
     const postRes = await request(app)
