@@ -159,3 +159,40 @@ export const listPostReposters: RequestHandler = async (req, res) => {
 
   res.json(users);
 };
+
+export const listPostLikers: RequestHandler = async (req, res) => {
+  const { postId } = req.params;
+
+  const post = await prisma.post.findUnique({
+    where: {
+      id: Number(postId),
+    },
+  });
+
+  if (!post) {
+    throw new NotFoundError("Post not found");
+  }
+
+  const likingUsers = await prisma.user.findMany({
+    where: {
+      likes: {
+        some: {
+          postId: Number(postId),
+        },
+      },
+    },
+    omit: {
+      password: true,
+    },
+    include: {
+      _count: {
+        select: {
+          followers: true,
+          following: true,
+        },
+      },
+    },
+  });
+
+  res.json(likingUsers);
+};

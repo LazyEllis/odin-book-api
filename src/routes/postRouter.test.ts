@@ -783,3 +783,53 @@ describe("GET /posts/:postId/reposted_by", () => {
     });
   });
 });
+
+describe("GET /posts/:postId/liking_users", () => {
+  it("returns a list of users that have liked a post on success", async () => {
+    const { token, user } = await createUser();
+    const { token: likingUserToken, user: likingUser } = await createUser({
+      username: "jane_doe",
+    });
+
+    const postRes = await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This post has been liked" });
+
+    await request(app)
+      .put(`/users/me/likes/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
+
+    await request(app)
+      .put(`/users/me/likes/${postRes.body.id}`)
+      .auth(likingUserToken, { type: "bearer" });
+
+    const res = await request(app)
+      .get(`/posts/${postRes.body.id}/liking_users`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual(expect.arrayContaining([user, likingUser]));
+  });
+
+  it("returns a 404 error if the post doesn't exist", async () => {
+    await request(app)
+      .get("/posts/1/liking_users")
+      .expect("Content-Type", /json/)
+      .expect({ message: "Post not found" })
+      .expect(404);
+  });
+
+  it("returns a 422 error if the post ID is not an integer", async () => {
+    const res = await request(app)
+      .get("/posts/1.5/liking_users")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "postId" }),
+      ]),
+    });
+  });
+});

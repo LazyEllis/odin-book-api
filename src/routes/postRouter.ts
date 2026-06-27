@@ -4,6 +4,7 @@ import {
   createPost,
   deletePost,
   getPostById,
+  listPostLikers,
   listPostQuotes,
   listPostReplies,
   listPostReposters,
@@ -26,5 +27,7 @@ postRouter.get("/:postId/replies", validatePostId, listPostReplies);
 postRouter.get("/:postId/quotes", validatePostId, listPostQuotes);
 
 postRouter.get("/:postId/reposted_by", validatePostId, listPostReposters);
+
+postRouter.get("/:postId/liking_users", validatePostId, listPostLikers);
 
 export default postRouter;
