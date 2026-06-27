@@ -9,12 +9,14 @@ import postRouter from "./routes/postRouter.ts";
 import pinnedPostRouter from "./routes/pinnedPostRouter.ts";
 import bookmarkRouter from "./routes/bookmarkRouter.ts";
 import repostRouter from "./routes/repostRouter.ts";
+import likeRouter from "./routes/likeRouter.ts";
 
 const app = express();
 
 app.use(express.json());
 app.use(cors({ origin: process.env.FRONTEND_URL }));
 
+app.use("/users/me/likes", likeRouter);
 app.use("/users", userRouter);
 app.use("/users/me/pinned_post", pinnedPostRouter);
 app.use("/users/me/bookmarks", bookmarkRouter);

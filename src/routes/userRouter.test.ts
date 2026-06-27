@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import request from "supertest";
 import app from "../tests/app.ts";
 import { userCreationPayload, userUpdatePayload } from "../tests/fixtures.ts";
+import { createUser } from "../tests/fixtures.ts";
 
 describe("POST /users", () => {
   it("returns the created user with a token on success", async () => {
@@ -739,6 +740,78 @@ describe("GET /users/:userId/posts", () => {
   it("returns a 422 error if the user ID isn't an integer", async () => {
     const res = await request(app)
       .get("/users/1.5/posts")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "userId" }),
+      ]),
+    });
+  });
+});
+
+describe("GET /users/:userId/likes", () => {
+  it("returns all liked posts on success", async () => {
+    const { user, token } = await createUser();
+
+    const postRes = await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This post has been liked" });
+
+    await request(app)
+      .post("/posts")
+      .auth(token, { type: "bearer" })
+      .send({ text: "This is a regular post" });
+
+    await request(app)
+      .put(`/users/me/likes/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
+
+    const res = await request(app)
+      .get(`/users/${user.id}/likes`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual([
+      {
+        id: expect.any(Number),
+        text: "This post has been liked",
+        attachment: null,
+        createdAt: expect.any(String),
+        author: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          profileImageUrl: user.profileImageUrl,
+        },
+        pinnedById: null,
+        conversationId: null,
+        repliedTo: null,
+        quotedPost: null,
+        _count: {
+          reposts: 0,
+          replies: 0,
+          likes: 1,
+          quotes: 0,
+          bookmarks: 0,
+        },
+      },
+    ]);
+  });
+
+  it("returns a 404 error if the user doesn't exist", async () => {
+    await request(app)
+      .get("/users/1/likes")
+      .expect("Content-Type", /json/)
+      .expect({ message: "User not found" })
+      .expect(404);
+  });
+
+  it("returns a 422 error if the user ID isn't an integer", async () => {
+    const res = await request(app)
+      .get("/users/1.5/likes")
       .expect("Content-Type", /json/)
       .expect(422);
 
