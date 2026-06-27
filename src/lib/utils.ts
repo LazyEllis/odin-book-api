@@ -25,6 +25,20 @@ export const getAuthenticatedUser = (user: Express.User | undefined) => {
   return user;
 };
 
+export const userFields = {
+  omit: {
+    password: true,
+  },
+  include: {
+    _count: {
+      select: {
+        followers: true,
+        following: true,
+      },
+    },
+  },
+};
+
 export const postFields = {
   omit: {
     authorId: true,

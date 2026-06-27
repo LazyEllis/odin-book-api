@@ -20,7 +20,7 @@ export const listBookmarks: RequestHandler = async (req, res) => {
     },
   });
 
-  const bookmarkedPosts = bookmarks.map((bookmark) => ({ ...bookmark.post }));
+  const bookmarkedPosts = bookmarks.map((bookmark) => bookmark.post);
 
   res.json(bookmarkedPosts);
 };

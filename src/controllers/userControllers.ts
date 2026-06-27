@@ -3,21 +3,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma.ts";
 import { NotFoundError } from "../lib/errors.ts";
-import { getAuthenticatedUser, postFields } from "../lib/utils.ts";
+import { getAuthenticatedUser, postFields, userFields } from "../lib/utils.ts";
 
 export const listUsers: RequestHandler = async (req, res) => {
   const users = await prisma.user.findMany({
-    omit: {
-      password: true,
-    },
-    include: {
-      _count: {
-        select: {
-          followers: true,
-          following: true,
-        },
-      },
-    },
+    ...userFields,
     orderBy: {
       username: "asc",
     },
@@ -41,17 +31,7 @@ export const createUser: RequestHandler = async (req, res) => {
       username,
       password: hashedPassword,
     },
-    omit: {
-      password: true,
-    },
-    include: {
-      _count: {
-        select: {
-          followers: true,
-          following: true,
-        },
-      },
-    },
+    ...userFields,
   });
 
   const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, {
@@ -68,17 +48,7 @@ export const getCurrentUser: RequestHandler = async (req, res) => {
     where: {
       id,
     },
-    omit: {
-      password: true,
-    },
-    include: {
-      _count: {
-        select: {
-          followers: true,
-          following: true,
-        },
-      },
-    },
+    ...userFields,
   });
 
   if (!user) {
@@ -103,17 +73,7 @@ export const updateCurrentUser: RequestHandler = async (req, res) => {
     where: {
       id,
     },
-    omit: {
-      password: true,
-    },
-    include: {
-      _count: {
-        select: {
-          followers: true,
-          following: true,
-        },
-      },
-    },
+    ...userFields,
   });
 
   res.json(user);
@@ -126,17 +86,7 @@ export const getUserById: RequestHandler = async (req, res) => {
     where: {
       id: Number(userId),
     },
-    omit: {
-      password: true,
-    },
-    include: {
-      _count: {
-        select: {
-          followers: true,
-          following: true,
-        },
-      },
-    },
+    ...userFields,
   });
 
   if (!user) {
@@ -156,17 +106,7 @@ export const getUserByUsername: RequestHandler = async (req, res) => {
         mode: "insensitive",
       },
     },
-    omit: {
-      password: true,
-    },
-    include: {
-      _count: {
-        select: {
-          followers: true,
-          following: true,
-        },
-      },
-    },
+    ...userFields,
   });
 
   if (!user) {
@@ -245,7 +185,7 @@ export const listUserLikes: RequestHandler = async (req, res) => {
     },
   });
 
-  const likedPosts = likes.map((like) => ({ ...like.post }));
+  const likedPosts = likes.map((like) => like.post);
 
   res.json(likedPosts);
 };

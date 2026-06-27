@@ -20,7 +20,7 @@ export const listCurrentUserLikes: RequestHandler = async (req, res) => {
     },
   });
 
-  const likedPosts = likes.map((like) => ({ ...like.post }));
+  const likedPosts = likes.map((like) => like.post);
 
   res.json(likedPosts);
 };

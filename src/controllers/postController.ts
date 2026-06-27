@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { prisma } from "../lib/prisma.ts";
-import { getAuthenticatedUser, postFields } from "../lib/utils.ts";
+import { getAuthenticatedUser, postFields, userFields } from "../lib/utils.ts";
 import { ForbiddenError, NotFoundError } from "../lib/errors.ts";
 
 export const listPosts: RequestHandler = async (req, res) => {
@@ -136,26 +136,18 @@ export const listPostReposters: RequestHandler = async (req, res) => {
     throw new NotFoundError("Post not found");
   }
 
-  const repostingUsers = await prisma.user.findMany({
+  const reposts = await prisma.repost.findMany({
     where: {
-      reposts: {
-        some: {
-          postId: Number(postId),
-        },
-      },
+      postId: Number(postId),
     },
-    omit: {
-      password: true,
-    },
-    include: {
-      _count: {
-        select: {
-          followers: true,
-          following: true,
-        },
+    select: {
+      user: {
+        ...userFields,
       },
     },
   });
+
+  const repostingUsers = reposts.map((repost) => repost.user);
 
   res.json(repostingUsers);
 };
@@ -173,26 +165,18 @@ export const listPostLikers: RequestHandler = async (req, res) => {
     throw new NotFoundError("Post not found");
   }
 
-  const likingUsers = await prisma.user.findMany({
+  const likes = await prisma.like.findMany({
     where: {
-      likes: {
-        some: {
-          postId: Number(postId),
-        },
-      },
+      postId: Number(postId),
     },
-    omit: {
-      password: true,
-    },
-    include: {
-      _count: {
-        select: {
-          followers: true,
-          following: true,
-        },
+    select: {
+      user: {
+        ...userFields,
       },
     },
   });
+
+  const likingUsers = likes.map((like) => like.user);
 
   res.json(likingUsers);
 };

@@ -1,31 +1,23 @@
 import type { RequestHandler } from "express";
 import { prisma } from "../lib/prisma.ts";
-import { getAuthenticatedUser } from "../lib/utils.ts";
+import { getAuthenticatedUser, userFields } from "../lib/utils.ts";
 import { NotFoundError } from "../lib/errors.ts";
 
 export const listCurrentUserFollowing: RequestHandler = async (req, res) => {
   const { id } = getAuthenticatedUser(req.user);
 
-  const following = await prisma.user.findMany({
+  const follows = await prisma.follow.findMany({
     where: {
-      followers: {
-        some: {
-          followingId: id,
-        },
-      },
+      followingId: id,
     },
-    omit: {
-      password: true,
-    },
-    include: {
-      _count: {
-        select: {
-          followers: true,
-          following: true,
-        },
+    select: {
+      follower: {
+        ...userFields,
       },
     },
   });
+
+  const following = follows.map((follow) => follow.follower);
 
   res.json(following);
 };
