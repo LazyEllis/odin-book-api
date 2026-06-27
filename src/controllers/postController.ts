@@ -90,14 +90,14 @@ export const listPostReplies: RequestHandler = async (req, res) => {
     throw new NotFoundError("Post not found");
   }
 
-  const posts = await prisma.post.findMany({
+  const replies = await prisma.post.findMany({
     where: {
       inReplyToPostId: Number(postId),
     },
     ...postFields,
   });
 
-  res.json(posts);
+  res.json(replies);
 };
 
 export const listPostQuotes: RequestHandler = async (req, res) => {
@@ -113,14 +113,14 @@ export const listPostQuotes: RequestHandler = async (req, res) => {
     throw new NotFoundError("Post not found");
   }
 
-  const posts = await prisma.post.findMany({
+  const quotes = await prisma.post.findMany({
     where: {
       quotedPostId: Number(postId),
     },
     ...postFields,
   });
 
-  res.json(posts);
+  res.json(quotes);
 };
 
 export const listPostReposters: RequestHandler = async (req, res) => {
@@ -136,7 +136,7 @@ export const listPostReposters: RequestHandler = async (req, res) => {
     throw new NotFoundError("Post not found");
   }
 
-  const users = await prisma.user.findMany({
+  const repostingUsers = await prisma.user.findMany({
     where: {
       reposts: {
         some: {
@@ -157,7 +157,7 @@ export const listPostReposters: RequestHandler = async (req, res) => {
     },
   });
 
-  res.json(users);
+  res.json(repostingUsers);
 };
 
 export const listPostLikers: RequestHandler = async (req, res) => {
