@@ -11,6 +11,7 @@ import bookmarkRouter from "./routes/bookmarkRouter.ts";
 import repostRouter from "./routes/repostRouter.ts";
 import likeRouter from "./routes/likeRouter.ts";
 import followingRouter from "./routes/followingRouter.ts";
+import indexRouter from "./routes/indexRouter.ts";
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/users/me/bookmarks", bookmarkRouter);
 app.use("/users/me/reposts", repostRouter);
 app.use("/auth", authRouter);
 app.use("/posts", postRouter);
+app.use("/", indexRouter);
 
 app.use(errorHandler);
 
