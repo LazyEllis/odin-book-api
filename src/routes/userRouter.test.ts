@@ -871,3 +871,97 @@ describe("GET /users/:userId/following", () => {
       .expect(404);
   });
 });
+
+describe("GET /users/me/followers", () => {
+  it("returns a list of users who follow the authenticated user", async () => {
+    const { token, user } = await createUser();
+    const { user: firstUser, token: firstUserToken } = await createUser({
+      username: "jane_doe",
+    });
+    const { user: secondUser, token: secondUserToken } = await createUser({
+      username: "jake_ryan",
+    });
+
+    await request(app)
+      .put(`/users/me/following/${user.id}`)
+      .auth(firstUserToken, { type: "bearer" });
+
+    await request(app)
+      .put(`/users/me/following/${user.id}`)
+      .auth(secondUserToken, { type: "bearer" });
+
+    const res = await request(app)
+      .get(`/users/me/followers`)
+      .auth(token, { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual(
+      expect.arrayContaining([
+        { ...firstUser, _count: { ...firstUser._count, following: 1 } },
+        { ...secondUser, _count: { ...secondUser._count, following: 1 } },
+      ]),
+    );
+  });
+
+  it("returns a 401 error if unauthenticated", async () => {
+    await request(app)
+      .get("/users/me/followers")
+      .expect("Content-Type", /json/)
+      .expect({ message: "Unauthorized" })
+      .expect(401);
+  });
+});
+
+describe("GET /users/:userId/followers", () => {
+  it("returns a list of users who follow the authenticated user", async () => {
+    const { user } = await createUser();
+    const { user: firstUser, token: firstUserToken } = await createUser({
+      username: "jane_doe",
+    });
+    const { user: secondUser, token: secondUserToken } = await createUser({
+      username: "jake_ryan",
+    });
+
+    await request(app)
+      .put(`/users/me/following/${user.id}`)
+      .auth(firstUserToken, { type: "bearer" });
+
+    await request(app)
+      .put(`/users/me/following/${user.id}`)
+      .auth(secondUserToken, { type: "bearer" });
+
+    const res = await request(app)
+      .get(`/users/${user.id}/followers`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual(
+      expect.arrayContaining([
+        { ...firstUser, _count: { ...firstUser._count, following: 1 } },
+        { ...secondUser, _count: { ...secondUser._count, following: 1 } },
+      ]),
+    );
+  });
+
+  it("returns a 422 error if the user ID isn't an integer", async () => {
+    const res = await request(app)
+      .get("/users/1.5/followers")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "userId" }),
+      ]),
+    });
+  });
+
+  it("returns a 404 error if the user doesn't exist", async () => {
+    await request(app)
+      .get("/users/1/followers")
+      .expect("Content-Type", /json/)
+      .expect({ message: "User not found" })
+      .expect(404);
+  });
+});

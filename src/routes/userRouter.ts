@@ -10,7 +10,9 @@ import {
   getCurrentUser,
   getUserById,
   getUserByUsername,
+  listCurrentUserFollowers,
   listCurrentUserPosts,
+  listUserFollowers,
   listUserFollowing,
   listUserLikes,
   listUserPosts,
@@ -30,6 +32,8 @@ userRouter.put("/me", requireAuth, validateUserUpdate, updateCurrentUser);
 
 userRouter.get("/me/posts", requireAuth, listCurrentUserPosts);
 
+userRouter.get("/me/followers", requireAuth, listCurrentUserFollowers);
+
 userRouter.get("/:userId", validateUserId, getUserById);
 
 userRouter.get("/:userId/posts", validateUserId, listUserPosts);
@@ -37,6 +41,8 @@ userRouter.get("/:userId/posts", validateUserId, listUserPosts);
 userRouter.get("/:userId/likes", validateUserId, listUserLikes);
 
 userRouter.get("/:userId/following", validateUserId, listUserFollowing);
+
+userRouter.get("/:userId/followers", validateUserId, listUserFollowers);
 
 userRouter.get("/by/username/:username", getUserByUsername);
 

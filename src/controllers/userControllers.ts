@@ -218,3 +218,51 @@ export const listUserFollowing: RequestHandler = async (req, res) => {
 
   res.json(following);
 };
+
+export const listCurrentUserFollowers: RequestHandler = async (req, res) => {
+  const { id } = getAuthenticatedUser(req.user);
+
+  const follows = await prisma.follow.findMany({
+    where: {
+      followerId: id,
+    },
+    select: {
+      following: {
+        ...userFields,
+      },
+    },
+  });
+
+  const followers = follows.map((follow) => follow.following);
+
+  res.json(followers);
+};
+
+export const listUserFollowers: RequestHandler = async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: Number(userId),
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  const follows = await prisma.follow.findMany({
+    where: {
+      followerId: Number(userId),
+    },
+    select: {
+      following: {
+        ...userFields,
+      },
+    },
+  });
+
+  const followers = follows.map((follow) => follow.following);
+
+  res.json(followers);
+};
