@@ -822,3 +822,52 @@ describe("GET /users/:userId/likes", () => {
     });
   });
 });
+
+describe("GET /users/:userId/following", () => {
+  it("returns a list of users that a specific user follows on success", async () => {
+    const { token, user } = await createUser();
+    const { user: firstUser } = await createUser({ username: "jane_doe" });
+    const { user: secondUser } = await createUser({ username: "jake_ryan" });
+
+    await request(app)
+      .put(`/users/me/following/${firstUser.id}`)
+      .auth(token, { type: "bearer" });
+
+    await request(app)
+      .put(`/users/me/following/${secondUser.id}`)
+      .auth(token, { type: "bearer" });
+
+    const res = await request(app)
+      .get(`/users/${user.id}/following`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual(
+      expect.arrayContaining([
+        { ...firstUser, _count: { ...firstUser._count, followers: 1 } },
+        { ...secondUser, _count: { ...secondUser._count, followers: 1 } },
+      ]),
+    );
+  });
+
+  it("returns a 422 error if the user ID isn't an integer", async () => {
+    const res = await request(app)
+      .get("/users/1.5/following")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "userId" }),
+      ]),
+    });
+  });
+
+  it("returns a 404 error if the user doesn't exist", async () => {
+    await request(app)
+      .get("/users/1/following")
+      .expect("Content-Type", /json/)
+      .expect({ message: "User not found" })
+      .expect(404);
+  });
+});

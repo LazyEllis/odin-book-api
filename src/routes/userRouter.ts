@@ -1,21 +1,22 @@
 import { Router } from "express";
-import {
-  createUser,
-  getCurrentUser,
-  getUserById,
-  getUserByUsername,
-  listCurrentUserPosts,
-  listUserLikes,
-  listUserPosts,
-  listUsers,
-  updateCurrentUser,
-} from "../controllers/userControllers.ts";
 import { requireAuth } from "../lib/auth.ts";
 import {
   validateUserCreation,
   validateUserId,
   validateUserUpdate,
 } from "../validators/userValidators.ts";
+import {
+  createUser,
+  getCurrentUser,
+  getUserById,
+  getUserByUsername,
+  listCurrentUserPosts,
+  listUserFollowing,
+  listUserLikes,
+  listUserPosts,
+  listUsers,
+  updateCurrentUser,
+} from "../controllers/userControllers.ts";
 
 const userRouter = Router();
 
@@ -34,6 +35,8 @@ userRouter.get("/:userId", validateUserId, getUserById);
 userRouter.get("/:userId/posts", validateUserId, listUserPosts);
 
 userRouter.get("/:userId/likes", validateUserId, listUserLikes);
+
+userRouter.get("/:userId/following", validateUserId, listUserFollowing);
 
 userRouter.get("/by/username/:username", getUserByUsername);
 
