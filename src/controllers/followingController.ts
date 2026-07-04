@@ -1,7 +1,8 @@
 import type { RequestHandler } from "express";
 import { prisma } from "../lib/prisma.ts";
-import { getAuthenticatedUser, userFields } from "../lib/utils.ts";
 import { NotFoundError } from "../lib/errors.ts";
+import { getAuthenticatedUser } from "../lib/auth.ts";
+import { userFields } from "../lib/selects.ts";
 
 export const listCurrentUserFollowing: RequestHandler = async (req, res) => {
   const { id } = getAuthenticatedUser(req.user);

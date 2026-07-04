@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
 import { prisma } from "../lib/prisma.ts";
-import { getAuthenticatedUser } from "../lib/utils.ts";
 import { ForbiddenError, NotFoundError } from "../lib/errors.ts";
+import { getAuthenticatedUser } from "../lib/auth.ts";
 
 export const pinPost: RequestHandler = async (req, res) => {
   const { id } = getAuthenticatedUser(req.user);

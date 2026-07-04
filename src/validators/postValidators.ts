@@ -1,5 +1,5 @@
 import { body, param } from "express-validator";
-import { validate } from "../lib/utils.ts";
+import { validate } from "../lib/validation.ts";
 import { prisma } from "../lib/prisma.ts";
 
 export const validatePost = validate([

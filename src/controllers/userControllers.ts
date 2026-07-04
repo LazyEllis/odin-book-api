@@ -3,7 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma.ts";
 import { NotFoundError } from "../lib/errors.ts";
-import { getAuthenticatedUser, postFields, userFields } from "../lib/utils.ts";
+import { getAuthenticatedUser } from "../lib/auth.ts";
+import { postFields, userFields } from "../lib/selects.ts";
 
 export const listUsers: RequestHandler = async (req, res) => {
   const users = await prisma.user.findMany({

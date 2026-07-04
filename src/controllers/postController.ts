@@ -1,7 +1,8 @@
 import type { RequestHandler } from "express";
 import { prisma } from "../lib/prisma.ts";
-import { getAuthenticatedUser, postFields, userFields } from "../lib/utils.ts";
 import { ForbiddenError, NotFoundError } from "../lib/errors.ts";
+import { getAuthenticatedUser } from "../lib/auth.ts";
+import { postFields, userFields } from "../lib/selects.ts";
 
 export const listPosts: RequestHandler = async (req, res) => {
   const posts = await prisma.post.findMany({
