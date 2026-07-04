@@ -1,35 +1,32 @@
-export class UnauthorizedError extends Error {
+class HTTPError extends Error {
   status: number;
 
-  constructor(message: string) {
+  constructor(message: string, status: number) {
     super(message);
-    this.status = 401;
+    this.status = status;
   }
 }
 
-export class ForbiddenError extends Error {
-  status: number;
-
+export class UnauthorizedError extends HTTPError {
   constructor(message: string) {
-    super(message);
-    this.status = 403;
+    super(message, 401);
   }
 }
 
-export class NotFoundError extends Error {
-  status: number;
-
+export class ForbiddenError extends HTTPError {
   constructor(message: string) {
-    super(message);
-    this.status = 404;
+    super(message, 403);
   }
 }
 
-export class ConflictError extends Error {
-  status: number;
-
+export class NotFoundError extends HTTPError {
   constructor(message: string) {
-    super(message);
-    this.status = 409;
+    super(message, 404);
+  }
+}
+
+export class ConflictError extends HTTPError {
+  constructor(message: string) {
+    super(message, 409);
   }
 }
