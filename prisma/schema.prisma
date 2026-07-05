@@ -11,12 +11,13 @@ model User {
   id              Int        @id @default(autoincrement())
   name            String
   username        String     @unique
-  password        String
+  password        String?
   createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz()
   description     String?
   location        String?
   profileImageUrl String?    @map("profile_image_url")
   url             String?
+  githubId        Int?       @unique @map("github_id")
   followers       Follow[]   @relation("follower")
   following       Follow[]   @relation("following")
   pinnedPost      Post?      @relation("PinnedPost")

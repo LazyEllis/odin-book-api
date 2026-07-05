@@ -1,6 +1,7 @@
 export const userFields = {
   omit: {
     password: true,
+    githubId: true,
   },
   include: {
     _count: {

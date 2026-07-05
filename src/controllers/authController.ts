@@ -1,10 +1,13 @@
+import crypto from "crypto";
 import type { RequestHandler } from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
-import { UnauthorizedError } from "../lib/errors.ts";
 import type { IVerifyOptions } from "passport-local";
+import { redis } from "../lib/redis.ts";
+import { UnauthorizedError } from "../lib/errors.ts";
+import { getAuthenticatedUser } from "../lib/auth.ts";
 
-export const generateToken: RequestHandler = (req, res, next) => {
+export const generateLocalAuthToken: RequestHandler = (req, res, next) => {
   passport.authenticate(
     "local",
     { session: false },
@@ -28,4 +31,42 @@ export const generateToken: RequestHandler = (req, res, next) => {
       res.json({ token });
     },
   )(req, res, next);
+};
+
+export const handleGithubCallback: RequestHandler = async (req, res) => {
+  const { id } = getAuthenticatedUser(req.user);
+
+  const code = crypto.randomUUID();
+
+  await redis.set(`oauth:${code}`, JSON.stringify({ id }), {
+    expiration: { type: "EX", value: 60 },
+  });
+
+  res.redirect(`${process.env.FRONTEND_URL}/oauth/callback?code=${code}`);
+};
+
+export const generateOAuthToken: RequestHandler = async (req, res) => {
+  const { code } = req.body;
+
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is not defined in environmental variables");
+  }
+
+  const cachedUser = await redis.get(`oauth:${code}`);
+
+  if (!cachedUser) {
+    throw new UnauthorizedError(
+      "The verification code is invalid or has expired",
+    );
+  }
+
+  const user = await JSON.parse(cachedUser);
+
+  const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, {
+    expiresIn: "24h",
+  });
+
+  await redis.del(`oauth:${code}`);
+
+  res.json({ token });
 };

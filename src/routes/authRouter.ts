@@ -1,8 +1,29 @@
 import { Router } from "express";
-import { generateToken } from "../controllers/authController.ts";
+import passport from "passport";
+import {
+  generateLocalAuthToken,
+  generateOAuthToken,
+  handleGithubCallback,
+} from "../controllers/authController.ts";
 
 const authRouter = Router();
 
-authRouter.post("/token", generateToken);
+authRouter.post("/token", generateLocalAuthToken);
+
+authRouter.get(
+  "/github",
+  passport.authenticate("github", { session: false, scope: ["user:email"] }),
+);
+
+authRouter.get(
+  "/github/callback",
+  passport.authenticate("github", {
+    session: false,
+    failureRedirect: `${process.env.FRONTEND_URL}/login`,
+  }),
+  handleGithubCallback,
+);
+
+authRouter.post("/exchange", generateOAuthToken);
 
 export default authRouter;
