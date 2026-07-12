@@ -20,7 +20,7 @@ describe("POST /users", () => {
         createdAt: expect.any(String),
         description: null,
         location: null,
-        profileImageUrl: null,
+        profileImageUrl: expect.any(String),
         url: null,
         _count: {
           followers: 0,
@@ -30,6 +30,9 @@ describe("POST /users", () => {
       token: expect.any(String),
     });
     expect(Date.parse(res.body.user.createdAt)).not.toBeNaN();
+    expect(new URL(res.body.user.profileImageUrl).hostname).toBe(
+      "www.gravatar.com",
+    );
   });
 
   it("returns a 422 error when fields are empty", async () => {
@@ -205,7 +208,7 @@ describe("GET /users", () => {
           createdAt: expect.any(String),
           description: null,
           location: null,
-          profileImageUrl: null,
+          profileImageUrl: expect.any(String),
           url: null,
           _count: {
             followers: 0,
@@ -219,7 +222,7 @@ describe("GET /users", () => {
           createdAt: expect.any(String),
           description: null,
           location: null,
-          profileImageUrl: null,
+          profileImageUrl: expect.any(String),
           url: null,
           _count: {
             followers: 0,
@@ -248,7 +251,7 @@ describe("GET /users/me", () => {
       createdAt: expect.any(String),
       description: null,
       location: null,
-      profileImageUrl: null,
+      profileImageUrl: expect.any(String),
       url: null,
       _count: {
         followers: 0,
@@ -293,7 +296,7 @@ describe("PUT /users/me", () => {
       createdAt: expect.any(String),
       description: userUpdatePayload.description,
       location: userUpdatePayload.location,
-      profileImageUrl: null,
+      profileImageUrl: expect.any(String),
       url: userUpdatePayload.url,
       _count: {
         followers: 0,
@@ -319,7 +322,7 @@ describe("PUT /users/me", () => {
       createdAt: expect.any(String),
       description: userUpdatePayload.description,
       location: userUpdatePayload.location,
-      profileImageUrl: null,
+      profileImageUrl: expect.any(String),
       url: userUpdatePayload.url,
       _count: {
         followers: 0,
@@ -345,7 +348,7 @@ describe("PUT /users/me", () => {
       createdAt: expect.any(String),
       description: null,
       location: null,
-      profileImageUrl: null,
+      profileImageUrl: expect.any(String),
       url: null,
       _count: {
         followers: 0,
@@ -526,7 +529,7 @@ describe("GET /users/:userId", () => {
       createdAt: expect.any(String),
       description: null,
       location: null,
-      profileImageUrl: null,
+      profileImageUrl: expect.any(String),
       url: null,
       _count: {
         followers: 0,
@@ -573,7 +576,7 @@ describe("GET /users/by/username/:username", () => {
       createdAt: expect.any(String),
       description: null,
       location: null,
-      profileImageUrl: null,
+      profileImageUrl: expect.any(String),
       url: null,
       _count: {
         followers: 0,
@@ -597,7 +600,7 @@ describe("GET /users/by/username/:username", () => {
       createdAt: expect.any(String),
       description: null,
       location: null,
-      profileImageUrl: null,
+      profileImageUrl: expect.any(String),
       url: null,
       _count: {
         followers: 0,

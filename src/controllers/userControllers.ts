@@ -5,6 +5,7 @@ import { prisma } from "../lib/prisma.ts";
 import { NotFoundError } from "../lib/errors.ts";
 import { getAuthenticatedUser } from "../lib/auth.ts";
 import { postFields, userFields } from "../lib/selects.ts";
+import { generateGravatarURL } from "../lib/gravatar.ts";
 
 export const listUsers: RequestHandler = async (req, res) => {
   const users = await prisma.user.findMany({
@@ -26,11 +27,14 @@ export const createUser: RequestHandler = async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  const profileImageUrl = generateGravatarURL(username);
+
   const user = await prisma.user.create({
     data: {
       name,
       username,
       password: hashedPassword,
+      profileImageUrl,
     },
     ...userFields,
   });

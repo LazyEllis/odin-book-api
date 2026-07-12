@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import type { RequestHandler } from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
