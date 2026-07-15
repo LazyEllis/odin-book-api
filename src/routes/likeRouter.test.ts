@@ -39,7 +39,6 @@ describe("GET /users/me/likes", () => {
           username: user.username,
           profileImageUrl: user.profileImageUrl,
         },
-        pinnedById: null,
         conversationId: null,
         repliedTo: null,
         quotedPost: null,

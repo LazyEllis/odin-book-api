@@ -5,7 +5,7 @@ import { createUser } from "../tests/fixtures.ts";
 
 describe("PUT /users/me/pinned_post/:postId", () => {
   it("pins a post on success", async () => {
-    const { user, token } = await createUser();
+    const { token } = await createUser();
 
     const postRes = await request(app)
       .post("/posts")
@@ -17,13 +17,15 @@ describe("PUT /users/me/pinned_post/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const pinnedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const userRes = await request(app)
+      .get("/users/me")
+      .auth(token, { type: "bearer" });
 
-    expect(pinnedPostRes.body.pinnedById).toBe(user.id);
+    expect(userRes.body.pinnedPostId).toBe(postRes.body.id);
   });
 
   it("replaces the previously pinned post when pinning a new one", async () => {
-    const { user, token } = await createUser();
+    const { token } = await createUser();
 
     const postRes = await request(app)
       .post("/posts")
@@ -43,14 +45,11 @@ describe("PUT /users/me/pinned_post/:postId", () => {
       .put(`/users/me/pinned_post/${otherPostRes.body.id}`)
       .auth(token, { type: "bearer" });
 
-    const updatedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const userRes = await request(app)
+      .get("/users/me")
+      .auth(token, { type: "bearer" });
 
-    const updatedOtherPostRes = await request(app).get(
-      `/posts/${otherPostRes.body.id}`,
-    );
-
-    expect(updatedPostRes.body.pinnedById).toBeNull();
-    expect(updatedOtherPostRes.body.pinnedById).toBe(user.id);
+    expect(userRes.body.pinnedPostId).toBe(otherPostRes.body.id);
   });
 
   it("returns a 422 error if the post ID is not an integer", async () => {
@@ -124,9 +123,11 @@ describe("DELETE /users/me/pinned_post/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const pinnedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const userRes = await request(app)
+      .get("/users/me")
+      .auth(token, { type: "bearer" });
 
-    expect(pinnedPostRes.body.pinnedById).toBeNull();
+    expect(userRes.body.pinnedPostId).toBeNull();
   });
 
   it("is idempotent when unpinning an already unpinned post", async () => {
@@ -142,9 +143,11 @@ describe("DELETE /users/me/pinned_post/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const pinnedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const userRes = await request(app)
+      .get("/users/me")
+      .auth(token, { type: "bearer" });
 
-    expect(pinnedPostRes.body.pinnedById).toBeNull();
+    expect(userRes.body.pinnedPostId).toBeNull();
   });
 
   it("returns a 422 error if the post ID is not an integer", async () => {

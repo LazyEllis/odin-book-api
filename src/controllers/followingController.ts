@@ -9,16 +9,16 @@ export const listCurrentUserFollowing: RequestHandler = async (req, res) => {
 
   const follows = await prisma.follow.findMany({
     where: {
-      followingId: id,
+      followerId: id,
     },
     select: {
-      follower: {
+      following: {
         ...userFields,
       },
     },
   });
 
-  const following = follows.map((follow) => follow.follower);
+  const following = follows.map((follow) => follow.following);
 
   res.json(following);
 };
@@ -39,14 +39,14 @@ export const followUser: RequestHandler = async (req, res) => {
 
   await prisma.follow.upsert({
     create: {
-      followerId: Number(userId),
-      followingId: id,
+      followerId: id,
+      followingId: Number(userId),
     },
     update: {},
     where: {
       followerId_followingId: {
-        followerId: Number(userId),
-        followingId: id,
+        followerId: id,
+        followingId: Number(userId),
       },
     },
   });
@@ -71,8 +71,8 @@ export const unfollowUser: RequestHandler = async (req, res) => {
   const follow = await prisma.follow.findUnique({
     where: {
       followerId_followingId: {
-        followerId: Number(userId),
-        followingId: id,
+        followerId: id,
+        followingId: Number(userId),
       },
     },
   });
@@ -84,8 +84,8 @@ export const unfollowUser: RequestHandler = async (req, res) => {
   await prisma.follow.delete({
     where: {
       followerId_followingId: {
-        followerId: Number(userId),
-        followingId: id,
+        followerId: id,
+        followingId: Number(userId),
       },
     },
   });

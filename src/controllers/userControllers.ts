@@ -210,16 +210,16 @@ export const listUserFollowing: RequestHandler = async (req, res) => {
 
   const follows = await prisma.follow.findMany({
     where: {
-      followingId: Number(userId),
+      followerId: Number(userId),
     },
     select: {
-      follower: {
+      following: {
         ...userFields,
       },
     },
   });
 
-  const following = follows.map((follow) => follow.follower);
+  const following = follows.map((follow) => follow.following);
 
   res.json(following);
 };
@@ -229,16 +229,16 @@ export const listCurrentUserFollowers: RequestHandler = async (req, res) => {
 
   const follows = await prisma.follow.findMany({
     where: {
-      followerId: id,
+      followingId: id,
     },
     select: {
-      following: {
+      follower: {
         ...userFields,
       },
     },
   });
 
-  const followers = follows.map((follow) => follow.following);
+  const followers = follows.map((follow) => follow.follower);
 
   res.json(followers);
 };
@@ -258,16 +258,16 @@ export const listUserFollowers: RequestHandler = async (req, res) => {
 
   const follows = await prisma.follow.findMany({
     where: {
-      followerId: Number(userId),
+      followingId: Number(userId),
     },
     select: {
-      following: {
+      follower: {
         ...userFields,
       },
     },
   });
 
-  const followers = follows.map((follow) => follow.following);
+  const followers = follows.map((follow) => follow.follower);
 
   res.json(followers);
 };

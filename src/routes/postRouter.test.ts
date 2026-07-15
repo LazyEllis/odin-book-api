@@ -25,7 +25,6 @@ describe("POST /posts", () => {
         username: user.username,
         profileImageUrl: user.profileImageUrl,
       },
-      pinnedById: null,
       conversationId: null,
       repliedTo: null,
       quotedPost: null,
@@ -68,7 +67,6 @@ describe("POST /posts", () => {
         username: user.username,
         profileImageUrl: user.profileImageUrl,
       },
-      pinnedById: null,
       conversationId: postRes.body.id,
       repliedTo: {
         id: postRes.body.id,
@@ -122,7 +120,6 @@ describe("POST /posts", () => {
         username: user.username,
         profileImageUrl: user.profileImageUrl,
       },
-      pinnedById: null,
       conversationId: null,
       repliedTo: null,
       quotedPost: {
@@ -180,7 +177,6 @@ describe("POST /posts", () => {
         username: user.username,
         profileImageUrl: user.profileImageUrl,
       },
-      pinnedById: null,
       conversationId: postRes.body.id,
       repliedTo: {
         id: postRes.body.id,
@@ -253,7 +249,6 @@ describe("POST /posts", () => {
         username: user.username,
         profileImageUrl: user.profileImageUrl,
       },
-      pinnedById: null,
       conversationId: postRes.body.id,
       repliedTo: {
         id: replyRes.body.id,
@@ -395,7 +390,7 @@ describe("GET /posts", () => {
             username: user.username,
             profileImageUrl: user.profileImageUrl,
           },
-          pinnedById: null,
+
           conversationId: null,
           repliedTo: null,
           quotedPost: null,
@@ -418,7 +413,6 @@ describe("GET /posts", () => {
             username: user.username,
             profileImageUrl: user.profileImageUrl,
           },
-          pinnedById: null,
           conversationId: null,
           repliedTo: null,
           quotedPost: null,
@@ -460,7 +454,6 @@ describe("GET /posts/:postId", () => {
         username: user.username,
         profileImageUrl: user.profileImageUrl,
       },
-      pinnedById: null,
       conversationId: null,
       repliedTo: null,
       quotedPost: null,
@@ -602,7 +595,6 @@ describe("GET /posts/:postId/replies", () => {
           username: user.username,
           profileImageUrl: user.profileImageUrl,
         },
-        pinnedById: null,
         conversationId: postRes.body.id,
         repliedTo: {
           id: postRes.body.id,
@@ -686,7 +678,6 @@ describe("GET /posts/:postId/quotes", () => {
           username: user.username,
           profileImageUrl: user.profileImageUrl,
         },
-        pinnedById: null,
         conversationId: null,
         repliedTo: null,
         quotedPost: {

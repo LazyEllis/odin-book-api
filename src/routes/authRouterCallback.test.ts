@@ -80,6 +80,7 @@ describe("GET /auth/github/callback", () => {
       location: null,
       profileImageUrl: mockUser.photos[0].value,
       url: mockUser.profileUrl,
+      pinnedPostId: null,
       _count: {
         followers: 0,
         following: 0,

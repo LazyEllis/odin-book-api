@@ -23,11 +23,7 @@ export const pinPost: RequestHandler = async (req, res) => {
 
   await prisma.user.update({
     data: {
-      pinnedPost: {
-        connect: {
-          id: Number(postId),
-        },
-      },
+      pinnedPostId: Number(postId),
     },
     where: {
       id,
@@ -57,11 +53,7 @@ export const unpinPost: RequestHandler = async (req, res) => {
 
   await prisma.user.update({
     data: {
-      pinnedPost: {
-        disconnect: {
-          id: Number(postId),
-        },
-      },
+      pinnedPostId: null,
     },
     where: {
       id,

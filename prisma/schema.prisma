@@ -17,10 +17,11 @@ model User {
   location        String?
   profileImageUrl String?    @map("profile_image_url")
   url             String?
+  pinnedPost      Post?      @relation("PinnedPost", fields: [pinnedPostId], references: [id])
+  pinnedPostId    Int?       @unique @map("pinned_post_id")
   githubId        Int?       @unique @map("github_id")
-  followers       Follow[]   @relation("follower")
-  following       Follow[]   @relation("following")
-  pinnedPost      Post?      @relation("PinnedPost")
+  followers       Follow[]   @relation("following")
+  following       Follow[]   @relation("follower")
   posts           Post[]     @relation("AuthoredPost")
   likes           Like[]
   bookmarks       Bookmark[]
@@ -47,8 +48,6 @@ model Post {
   createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz()
   author          User       @relation("AuthoredPost", fields: [authorId], references: [id])
   authorId        Int        @map("author_id")
-  pinnedBy        User?      @relation("PinnedPost", fields: [pinnedById], references: [id])
-  pinnedById      Int?       @unique @map("pinned_by_id")
   conversationId  Int?       @map("conversation_id")
   conversation    Post?      @relation("ConversationThread", fields: [conversationId], references: [id])
   thread          Post[]     @relation("ConversationThread")
@@ -58,6 +57,7 @@ model Post {
   quotedPostId    Int?       @map("quoted_post_id")
   quotedPost      Post?      @relation("PostQuotes", fields: [quotedPostId], references: [id])
   quotes          Post[]     @relation("PostQuotes")
+  pinnedBy        User?      @relation("PinnedPost")
   likes           Like[]
   bookmarks       Bookmark[]
   reposts         Repost[]

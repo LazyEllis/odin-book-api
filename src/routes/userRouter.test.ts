@@ -22,6 +22,7 @@ describe("POST /users", () => {
         location: null,
         profileImageUrl: expect.any(String),
         url: null,
+        pinnedPostId: null,
         _count: {
           followers: 0,
           following: 0,
@@ -210,6 +211,7 @@ describe("GET /users", () => {
           location: null,
           profileImageUrl: expect.any(String),
           url: null,
+          pinnedPostId: null,
           _count: {
             followers: 0,
             following: 0,
@@ -224,6 +226,7 @@ describe("GET /users", () => {
           location: null,
           profileImageUrl: expect.any(String),
           url: null,
+          pinnedPostId: null,
           _count: {
             followers: 0,
             following: 0,
@@ -253,6 +256,7 @@ describe("GET /users/me", () => {
       location: null,
       profileImageUrl: expect.any(String),
       url: null,
+      pinnedPostId: null,
       _count: {
         followers: 0,
         following: 0,
@@ -298,6 +302,7 @@ describe("PUT /users/me", () => {
       location: userUpdatePayload.location,
       profileImageUrl: expect.any(String),
       url: userUpdatePayload.url,
+      pinnedPostId: null,
       _count: {
         followers: 0,
         following: 0,
@@ -324,6 +329,7 @@ describe("PUT /users/me", () => {
       location: userUpdatePayload.location,
       profileImageUrl: expect.any(String),
       url: userUpdatePayload.url,
+      pinnedPostId: null,
       _count: {
         followers: 0,
         following: 0,
@@ -349,6 +355,7 @@ describe("PUT /users/me", () => {
       description: null,
       location: null,
       profileImageUrl: expect.any(String),
+      pinnedPostId: null,
       url: null,
       _count: {
         followers: 0,
@@ -531,6 +538,7 @@ describe("GET /users/:userId", () => {
       location: null,
       profileImageUrl: expect.any(String),
       url: null,
+      pinnedPostId: null,
       _count: {
         followers: 0,
         following: 0,
@@ -578,6 +586,7 @@ describe("GET /users/by/username/:username", () => {
       location: null,
       profileImageUrl: expect.any(String),
       url: null,
+      pinnedPostId: null,
       _count: {
         followers: 0,
         following: 0,
@@ -602,6 +611,7 @@ describe("GET /users/by/username/:username", () => {
       location: null,
       profileImageUrl: expect.any(String),
       url: null,
+      pinnedPostId: null,
       _count: {
         followers: 0,
         following: 0,
@@ -656,7 +666,6 @@ describe("GET /users/me/posts", () => {
           username: user.username,
           profileImageUrl: user.profileImageUrl,
         },
-        pinnedById: null,
         conversationId: null,
         repliedTo: null,
         quotedPost: null,
@@ -717,7 +726,6 @@ describe("GET /users/:userId/posts", () => {
           username: user.username,
           profileImageUrl: user.profileImageUrl,
         },
-        pinnedById: null,
         conversationId: null,
         repliedTo: null,
         quotedPost: null,
@@ -789,7 +797,6 @@ describe("GET /users/:userId/likes", () => {
           username: user.username,
           profileImageUrl: user.profileImageUrl,
         },
-        pinnedById: null,
         conversationId: null,
         repliedTo: null,
         quotedPost: null,
