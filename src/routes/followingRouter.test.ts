@@ -25,8 +25,22 @@ describe("GET /users/me/following", () => {
 
     expect(res.body).toEqual(
       expect.arrayContaining([
-        { ...firstUser, _count: { ...firstUser._count, followers: 1 } },
-        { ...secondUser, _count: { ...secondUser._count, followers: 1 } },
+        {
+          ...firstUser,
+          _count: { ...firstUser._count, followers: 1 },
+          connectionStatus: {
+            ...firstUser.connectionStatus,
+            isFollowing: true,
+          },
+        },
+        {
+          ...secondUser,
+          _count: { ...secondUser._count, followers: 1 },
+          connectionStatus: {
+            ...firstUser.connectionStatus,
+            isFollowing: true,
+          },
+        },
       ]),
     );
   });

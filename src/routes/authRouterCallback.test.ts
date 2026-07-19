@@ -85,6 +85,10 @@ describe("GET /auth/github/callback", () => {
         followers: 0,
         following: 0,
       },
+      connectionStatus: {
+        isFollower: false,
+        isFollowing: false,
+      },
     });
   });
 });

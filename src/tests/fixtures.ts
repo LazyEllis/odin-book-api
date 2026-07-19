@@ -15,6 +15,10 @@ interface UserWithToken {
       followers: number;
       following: number;
     };
+    connectionStatus: {
+      isFollower: boolean;
+      isFollowing: boolean;
+    };
   };
   token: string;
 }

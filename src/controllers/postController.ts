@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import { prisma } from "../lib/prisma.ts";
 import { ForbiddenError, NotFoundError } from "../lib/errors.ts";
 import { getAuthenticatedUser } from "../lib/auth.ts";
-import { postFields, userFields } from "../lib/selects.ts";
+import { postFields, selectUserFields, transformUser } from "../lib/selects.ts";
 
 export const listPosts: RequestHandler = async (req, res) => {
   const posts = await prisma.post.findMany({
@@ -143,12 +143,12 @@ export const listPostReposters: RequestHandler = async (req, res) => {
     },
     select: {
       user: {
-        ...userFields,
+        ...selectUserFields(req.user?.id),
       },
     },
   });
 
-  const repostingUsers = reposts.map((repost) => repost.user);
+  const repostingUsers = reposts.map((repost) => transformUser(repost.user));
 
   res.json(repostingUsers);
 };
@@ -172,12 +172,12 @@ export const listPostLikers: RequestHandler = async (req, res) => {
     },
     select: {
       user: {
-        ...userFields,
+        ...selectUserFields(req.user?.id),
       },
     },
   });
 
-  const likingUsers = likes.map((like) => like.user);
+  const likingUsers = likes.map((like) => transformUser(like.user));
 
   res.json(likingUsers);
 };

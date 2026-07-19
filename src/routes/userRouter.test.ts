@@ -44,6 +44,10 @@ describe("POST /users", () => {
           followers: 0,
           following: 0,
         },
+        connectionStatus: {
+          isFollower: false,
+          isFollowing: false,
+        },
       },
       token: expect.any(String),
     });
@@ -233,6 +237,10 @@ describe("GET /users", () => {
             followers: 0,
             following: 0,
           },
+          connectionStatus: {
+            isFollower: false,
+            isFollowing: false,
+          },
         },
         {
           id: expect.any(Number),
@@ -247,6 +255,10 @@ describe("GET /users", () => {
           _count: {
             followers: 0,
             following: 0,
+          },
+          connectionStatus: {
+            isFollower: false,
+            isFollowing: false,
           },
         },
       ]),
@@ -277,6 +289,10 @@ describe("GET /users/me", () => {
       _count: {
         followers: 0,
         following: 0,
+      },
+      connectionStatus: {
+        isFollower: false,
+        isFollowing: false,
       },
     });
   });
@@ -324,6 +340,10 @@ describe("PUT /users/me", () => {
         followers: 0,
         following: 0,
       },
+      connectionStatus: {
+        isFollower: false,
+        isFollowing: false,
+      },
     });
   });
 
@@ -351,6 +371,10 @@ describe("PUT /users/me", () => {
         followers: 0,
         following: 0,
       },
+      connectionStatus: {
+        isFollower: false,
+        isFollowing: false,
+      },
     });
   });
 
@@ -377,6 +401,10 @@ describe("PUT /users/me", () => {
       _count: {
         followers: 0,
         following: 0,
+      },
+      connectionStatus: {
+        isFollower: false,
+        isFollowing: false,
       },
     });
   });
@@ -560,6 +588,10 @@ describe("GET /users/:userId", () => {
         followers: 0,
         following: 0,
       },
+      connectionStatus: {
+        isFollower: false,
+        isFollowing: false,
+      },
     });
   });
 
@@ -608,6 +640,10 @@ describe("GET /users/by/username/:username", () => {
         followers: 0,
         following: 0,
       },
+      connectionStatus: {
+        isFollower: false,
+        isFollowing: false,
+      },
     });
   });
 
@@ -632,6 +668,10 @@ describe("GET /users/by/username/:username", () => {
       _count: {
         followers: 0,
         following: 0,
+      },
+      connectionStatus: {
+        isFollower: false,
+        isFollowing: false,
       },
     });
   });
@@ -925,8 +965,16 @@ describe("GET /users/me/followers", () => {
 
     expect(res.body).toEqual(
       expect.arrayContaining([
-        { ...firstUser, _count: { ...firstUser._count, following: 1 } },
-        { ...secondUser, _count: { ...secondUser._count, following: 1 } },
+        {
+          ...firstUser,
+          _count: { ...firstUser._count, following: 1 },
+          connectionStatus: { ...firstUser.connectionStatus, isFollower: true },
+        },
+        {
+          ...secondUser,
+          _count: { ...secondUser._count, following: 1 },
+          connectionStatus: { ...firstUser.connectionStatus, isFollower: true },
+        },
       ]),
     );
   });
@@ -1017,6 +1065,10 @@ describe("PUT /users/me/profile_image", () => {
       _count: {
         followers: 0,
         following: 0,
+      },
+      connectionStatus: {
+        isFollower: false,
+        isFollowing: false,
       },
     });
   });

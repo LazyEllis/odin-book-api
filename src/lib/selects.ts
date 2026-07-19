@@ -1,17 +1,65 @@
-export const userFields = {
-  omit: {
-    password: true,
-    githubId: true,
-  },
-  include: {
-    _count: {
-      select: {
-        followers: true,
-        following: true,
-      },
+import type {
+  PostInclude,
+  PostOmit,
+  UserInclude,
+  UserOmit,
+} from "../generated/prisma/models.ts";
+
+interface UserShape {
+  id: number;
+  name: string;
+  username: string;
+  createdAt: Date;
+  description: string | null;
+  location: string | null;
+  profileImageUrl: string | null;
+  url: string | null;
+  pinnedPostId: number | null;
+  _count: {
+    followers: number;
+    following: number;
+  };
+  followers?: {
+    followerId: number;
+    followingId: number;
+    followedAt: Date;
+  }[];
+  following?: {
+    followerId: number;
+    followingId: number;
+    followedAt: Date;
+  }[];
+}
+
+export const selectUserFields = (userId?: number) =>
+  ({
+    omit: {
+      password: true,
+      githubId: true,
     },
-  },
-};
+    include: {
+      _count: {
+        select: {
+          followers: true,
+          following: true,
+        },
+      },
+      ...(userId && {
+        followers: {
+          where: {
+            followerId: userId,
+          },
+        },
+      }),
+      ...(userId && {
+        following: {
+          where: {
+            followingId: userId,
+          },
+        },
+      }),
+    },
+  }) satisfies { omit: UserOmit; include: UserInclude };
 
 export const postFields = {
   omit: {
@@ -70,4 +118,19 @@ export const postFields = {
       },
     },
   },
+} satisfies {
+  omit: PostOmit;
+  include: PostInclude;
 };
+
+export const transformUser = ({
+  followers,
+  following,
+  ...rest
+}: UserShape) => ({
+  ...rest,
+  connectionStatus: {
+    isFollower: following ? following.length > 0 : false,
+    isFollowing: followers ? followers.length > 0 : false,
+  },
+});

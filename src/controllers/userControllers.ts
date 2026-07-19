@@ -5,16 +5,18 @@ import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
 import { prisma } from "../lib/prisma.ts";
 import { BadRequestError, NotFoundError } from "../lib/errors.ts";
 import { getAuthenticatedUser } from "../lib/auth.ts";
-import { postFields, userFields } from "../lib/selects.ts";
+import { postFields, selectUserFields, transformUser } from "../lib/selects.ts";
 import { generateGravatarURL } from "../lib/gravatar.ts";
 
 export const listUsers: RequestHandler = async (req, res) => {
-  const users = await prisma.user.findMany({
-    ...userFields,
+  const rawUsers = await prisma.user.findMany({
+    ...selectUserFields(req.user?.id),
     orderBy: {
       username: "asc",
     },
   });
+
+  const users = rawUsers.map(transformUser);
 
   res.json(users);
 };
@@ -30,15 +32,17 @@ export const createUser: RequestHandler = async (req, res) => {
 
   const profileImageUrl = generateGravatarURL(username);
 
-  const user = await prisma.user.create({
+  const rawUser = await prisma.user.create({
     data: {
       name,
       username,
       password: hashedPassword,
       profileImageUrl,
     },
-    ...userFields,
+    ...selectUserFields(),
   });
+
+  const user = transformUser(rawUser);
 
   const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, {
     expiresIn: "24h",
@@ -50,16 +54,18 @@ export const createUser: RequestHandler = async (req, res) => {
 export const getCurrentUser: RequestHandler = async (req, res) => {
   const { id } = getAuthenticatedUser(req.user);
 
-  const user = await prisma.user.findUnique({
+  const rawUser = await prisma.user.findUnique({
     where: {
       id,
     },
-    ...userFields,
+    ...selectUserFields(req.user?.id),
   });
 
-  if (!user) {
+  if (!rawUser) {
     throw new NotFoundError("User not found");
   }
+
+  const user = transformUser(rawUser);
 
   res.json(user);
 };
@@ -79,25 +85,29 @@ export const updateCurrentUser: RequestHandler = async (req, res) => {
     where: {
       id,
     },
-    ...userFields,
+    ...selectUserFields(req.user?.id),
   });
 
-  res.json(user);
+  const updatedUser = transformUser(user);
+
+  res.json(updatedUser);
 };
 
 export const getUserById: RequestHandler = async (req, res) => {
   const { userId } = req.params;
 
-  const user = await prisma.user.findUnique({
+  const rawUser = await prisma.user.findUnique({
     where: {
       id: Number(userId),
     },
-    ...userFields,
+    ...selectUserFields(req.user?.id),
   });
 
-  if (!user) {
+  if (!rawUser) {
     throw new NotFoundError("User not found");
   }
+
+  const user = transformUser(rawUser);
 
   res.json(user);
 };
@@ -105,19 +115,21 @@ export const getUserById: RequestHandler = async (req, res) => {
 export const getUserByUsername: RequestHandler = async (req, res) => {
   const { username } = req.params;
 
-  const user = await prisma.user.findFirst({
+  const rawUser = await prisma.user.findFirst({
     where: {
       username: {
         equals: String(username),
         mode: "insensitive",
       },
     },
-    ...userFields,
+    ...selectUserFields(req.user?.id),
   });
 
-  if (!user) {
+  if (!rawUser) {
     throw new NotFoundError("User not found");
   }
+
+  const user = transformUser(rawUser);
 
   res.json(user);
 };
@@ -215,12 +227,12 @@ export const listUserFollowing: RequestHandler = async (req, res) => {
     },
     select: {
       following: {
-        ...userFields,
+        ...selectUserFields(req.user?.id),
       },
     },
   });
 
-  const following = follows.map((follow) => follow.following);
+  const following = follows.map((follow) => transformUser(follow.following));
 
   res.json(following);
 };
@@ -234,12 +246,12 @@ export const listCurrentUserFollowers: RequestHandler = async (req, res) => {
     },
     select: {
       follower: {
-        ...userFields,
+        ...selectUserFields(id),
       },
     },
   });
 
-  const followers = follows.map((follow) => follow.follower);
+  const followers = follows.map((follow) => transformUser(follow.follower));
 
   res.json(followers);
 };
@@ -263,12 +275,12 @@ export const listUserFollowers: RequestHandler = async (req, res) => {
     },
     select: {
       follower: {
-        ...userFields,
+        ...selectUserFields(req.user?.id),
       },
     },
   });
 
-  const followers = follows.map((follow) => follow.follower);
+  const followers = follows.map((follow) => transformUser(follow.follower));
 
   res.json(followers);
 };
@@ -295,15 +307,17 @@ export const uploadProfileImage: RequestHandler = async (req, res) => {
       .end(buffer);
   });
 
-  const updatedUser = await prisma.user.update({
+  const rawUser = await prisma.user.update({
     where: {
       id,
     },
     data: {
       profileImageUrl: image.secure_url,
     },
-    ...userFields,
+    ...selectUserFields(req.user?.id),
   });
+
+  const updatedUser = transformUser(rawUser);
 
   res.json(updatedUser);
 };
