@@ -1,6 +1,8 @@
+import multer from "multer";
 import { Router } from "express";
 import { requireAuth } from "../lib/auth.ts";
 import {
+  validateProfileImage,
   validateUserCreation,
   validateUserId,
   validateUserUpdate,
@@ -18,9 +20,12 @@ import {
   listUserPosts,
   listUsers,
   updateCurrentUser,
+  uploadProfileImage,
 } from "../controllers/userControllers.ts";
 
 const userRouter = Router();
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 userRouter.get("/", listUsers);
 
@@ -33,6 +38,14 @@ userRouter.put("/me", requireAuth, validateUserUpdate, updateCurrentUser);
 userRouter.get("/me/posts", requireAuth, listCurrentUserPosts);
 
 userRouter.get("/me/followers", requireAuth, listCurrentUserFollowers);
+
+userRouter.put(
+  "/me/profile_image",
+  requireAuth,
+  upload.single("profile_image"),
+  validateProfileImage,
+  uploadProfileImage,
+);
 
 userRouter.get("/:userId", validateUserId, getUserById);
 

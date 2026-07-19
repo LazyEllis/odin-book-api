@@ -1,8 +1,25 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import request from "supertest";
 import app from "../tests/app.ts";
 import { userCreationPayload, userUpdatePayload } from "../tests/fixtures.ts";
 import { createUser } from "../tests/fixtures.ts";
+
+vi.mock("cloudinary", () => ({
+  v2: {
+    uploader: {
+      upload_stream: (
+        opts: { public_id: string },
+        cb: (arg0: undefined, arg1: { secure_url: string }) => void,
+      ) => ({
+        end: () => {
+          cb(undefined, {
+            secure_url: `https://example.com/${opts.public_id}`,
+          });
+        },
+      }),
+    },
+  },
+}));
 
 describe("POST /users", () => {
   it("returns the created user with a token on success", async () => {
@@ -973,5 +990,75 @@ describe("GET /users/:userId/followers", () => {
       .expect("Content-Type", /json/)
       .expect({ message: "User not found" })
       .expect(404);
+  });
+});
+
+describe("PUT /users/me/profile_image", () => {
+  it("returns the authenticated user with the updated profile image on success", async () => {
+    const userRes = await request(app).post("/users").send(userCreationPayload);
+
+    const res = await request(app)
+      .put("/users/me/profile_image")
+      .auth(userRes.body.token, { type: "bearer" })
+      .attach("profile_image", "src/tests/files/avatar.jpg")
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      id: expect.any(Number),
+      name: userCreationPayload.name,
+      username: userCreationPayload.username,
+      createdAt: expect.any(String),
+      description: null,
+      location: null,
+      profileImageUrl: `https://example.com/user-${userRes.body.user.id}`,
+      url: null,
+      pinnedPostId: null,
+      _count: {
+        followers: 0,
+        following: 0,
+      },
+    });
+  });
+
+  it("returns a 422 error if a file is not attached", async () => {
+    const userRes = await request(app).post("/users").send(userCreationPayload);
+
+    const res = await request(app)
+      .put("/users/me/profile_image")
+      .auth(userRes.body.token, { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "profile_image" }),
+      ]),
+    });
+  });
+
+  it("returns a 422 error if the uploaded file is not an image", async () => {
+    const userRes = await request(app).post("/users").send(userCreationPayload);
+
+    const res = await request(app)
+      .put("/users/me/profile_image")
+      .auth(userRes.body.token, { type: "bearer" })
+      .attach("profile_image", "src/tests/files/file.txt")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "profile_image" }),
+      ]),
+    });
+  });
+
+  it("returns a 401 error if unauthenticated", async () => {
+    await request(app)
+      .put("/users/me/profile_image")
+      .expect("Content-Type", /json/)
+      .expect({ message: "Unauthorized" })
+      .expect(401);
   });
 });

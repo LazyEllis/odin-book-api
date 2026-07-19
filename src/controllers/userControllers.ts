@@ -1,8 +1,9 @@
 import type { RequestHandler } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
 import { prisma } from "../lib/prisma.ts";
-import { NotFoundError } from "../lib/errors.ts";
+import { BadRequestError, NotFoundError } from "../lib/errors.ts";
 import { getAuthenticatedUser } from "../lib/auth.ts";
 import { postFields, userFields } from "../lib/selects.ts";
 import { generateGravatarURL } from "../lib/gravatar.ts";
@@ -270,4 +271,39 @@ export const listUserFollowers: RequestHandler = async (req, res) => {
   const followers = follows.map((follow) => follow.follower);
 
   res.json(followers);
+};
+
+export const uploadProfileImage: RequestHandler = async (req, res) => {
+  const { id } = getAuthenticatedUser(req.user);
+
+  if (!req.file) {
+    throw new BadRequestError("You must upload an image");
+  }
+
+  const { buffer } = req.file;
+
+  const image = await new Promise<UploadApiResponse>((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream(
+        { resource_type: "image", public_id: `user-${id}`, overwrite: true },
+        (error, result) => {
+          if (error) return reject(error);
+          if (!result) return reject(new Error("Cloudinary return no URL"));
+          return resolve(result);
+        },
+      )
+      .end(buffer);
+  });
+
+  const updatedUser = await prisma.user.update({
+    where: {
+      id,
+    },
+    data: {
+      profileImageUrl: image.secure_url,
+    },
+    ...userFields,
+  });
+
+  res.json(updatedUser);
 };

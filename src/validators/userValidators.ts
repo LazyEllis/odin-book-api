@@ -1,4 +1,4 @@
-import { body, param } from "express-validator";
+import { body, check, param } from "express-validator";
 import { validate } from "../lib/validation.ts";
 import { prisma } from "../lib/prisma.ts";
 
@@ -73,6 +73,15 @@ export const validateUserUpdate = validate([
     .isURL({ require_protocol: true })
     .withMessage("The URL must be a valid URL.")
     .optional({ values: "null" }),
+]);
+
+export const validateProfileImage = validate([
+  check("profile_image")
+    .custom((_, { req }) => req.file)
+    .withMessage("You must upload an image.")
+    .bail()
+    .custom((_, { req }) => req.file.mimetype.startsWith("image"))
+    .withMessage("You must upload a valid image file."),
 ]);
 
 export const validateUserId = validate([
