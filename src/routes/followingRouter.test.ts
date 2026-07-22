@@ -65,10 +65,13 @@ describe("PUT /users/me/following/:userId", () => {
       .expect(204);
 
     const res = await request(app).get(`/users/${user.id}`);
-    const followedUserRes = await request(app).get(`/users/${followedUser.id}`);
+    const followedUserRes = await request(app)
+      .get(`/users/${followedUser.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(res.body._count.following).toBe(1);
     expect(followedUserRes.body._count.followers).toBe(1);
+    expect(followedUserRes.body.connectionStatus.isFollowing).toBe(true);
   });
 
   it("is idempotent when following an already followed user", async () => {
@@ -86,10 +89,13 @@ describe("PUT /users/me/following/:userId", () => {
       .expect(204);
 
     const res = await request(app).get(`/users/${user.id}`);
-    const followedUserRes = await request(app).get(`/users/${followedUser.id}`);
+    const followedUserRes = await request(app)
+      .get(`/users/${followedUser.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(res.body._count.following).toBe(1);
     expect(followedUserRes.body._count.followers).toBe(1);
+    expect(followedUserRes.body.connectionStatus.isFollowing).toBe(true);
   });
 
   it("returns a 422 error if the user ID is not an integer", async () => {
@@ -160,10 +166,13 @@ describe("DELETE /users/me/following/:userId", () => {
       .expect(204);
 
     const res = await request(app).get(`/users/${user.id}`);
-    const followedUserRes = await request(app).get(`/users/${followedUser.id}`);
+    const followedUserRes = await request(app)
+      .get(`/users/${followedUser.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(res.body._count.following).toBe(0);
     expect(followedUserRes.body._count.followers).toBe(0);
+    expect(followedUserRes.body.connectionStatus.isFollowing).toBe(false);
   });
 
   it("is idempotent when unfollowing an user than hasn't been followed", async () => {
@@ -176,10 +185,13 @@ describe("DELETE /users/me/following/:userId", () => {
       .expect(204);
 
     const res = await request(app).get(`/users/${user.id}`);
-    const followedUserRes = await request(app).get(`/users/${followedUser.id}`);
+    const followedUserRes = await request(app)
+      .get(`/users/${followedUser.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(res.body._count.following).toBe(0);
     expect(followedUserRes.body._count.followers).toBe(0);
+    expect(followedUserRes.body.connectionStatus.isFollowing).toBe(false);
   });
 
   it("returns a 422 error if the user ID is not an integer", async () => {

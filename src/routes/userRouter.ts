@@ -1,6 +1,6 @@
 import multer from "multer";
 import { Router } from "express";
-import { requireAuth } from "../lib/auth.ts";
+import { optionalAuth, requireAuth } from "../lib/auth.ts";
 import {
   validateProfileImage,
   validateUserCreation,
@@ -27,9 +27,9 @@ const userRouter = Router();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-userRouter.get("/", listUsers);
+userRouter.get("/", optionalAuth, listUsers);
 
-userRouter.post("/", validateUserCreation, createUser);
+userRouter.post("/", optionalAuth, validateUserCreation, createUser);
 
 userRouter.get("/me", requireAuth, getCurrentUser);
 
@@ -47,16 +47,26 @@ userRouter.put(
   uploadProfileImage,
 );
 
-userRouter.get("/:userId", validateUserId, getUserById);
+userRouter.get("/:userId", optionalAuth, validateUserId, getUserById);
 
-userRouter.get("/:userId/posts", validateUserId, listUserPosts);
+userRouter.get("/:userId/posts", optionalAuth, validateUserId, listUserPosts);
 
-userRouter.get("/:userId/likes", validateUserId, listUserLikes);
+userRouter.get("/:userId/likes", optionalAuth, validateUserId, listUserLikes);
 
-userRouter.get("/:userId/following", validateUserId, listUserFollowing);
+userRouter.get(
+  "/:userId/following",
+  optionalAuth,
+  validateUserId,
+  listUserFollowing,
+);
 
-userRouter.get("/:userId/followers", validateUserId, listUserFollowers);
+userRouter.get(
+  "/:userId/followers",
+  optionalAuth,
+  validateUserId,
+  listUserFollowers,
+);
 
-userRouter.get("/by/username/:username", getUserByUsername);
+userRouter.get("/by/username/:username", optionalAuth, getUserByUsername);
 
 export default userRouter;

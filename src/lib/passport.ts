@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as JWTStrategy, ExtractJwt } from "passport-jwt";
 import { Strategy as GitHubStrategy, type Profile } from "passport-github2";
+import { Strategy as AnonymousStrategy } from "passport-anonymous";
 import { prisma } from "./prisma.ts";
 
 interface GitHubProfile extends Profile {
@@ -126,3 +127,5 @@ passport.use(
     },
   ),
 );
+
+passport.use(new AnonymousStrategy());

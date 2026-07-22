@@ -6,6 +6,10 @@ export const requireAuth = passport.authenticate("jwt", {
   failWithError: true,
 });
 
+export const optionalAuth = passport.authenticate(["jwt", "anonymous"], {
+  session: false,
+});
+
 export const getAuthenticatedUser = (user: Express.User | undefined) => {
   if (!user) {
     throw new UnauthorizedError("Unauthorized");
