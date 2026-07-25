@@ -733,6 +733,11 @@ describe("GET /users/me/posts", () => {
           quotes: 0,
           bookmarks: 0,
         },
+        interactionStatus: {
+          isLiked: false,
+          isReposted: false,
+          isBookmarked: false,
+        },
       },
     ]);
   });
@@ -792,6 +797,11 @@ describe("GET /users/:userId/posts", () => {
           likes: 0,
           quotes: 0,
           bookmarks: 0,
+        },
+        interactionStatus: {
+          isLiked: false,
+          isReposted: false,
+          isBookmarked: false,
         },
       },
     ]);
@@ -863,6 +873,11 @@ describe("GET /users/:userId/likes", () => {
           likes: 1,
           quotes: 0,
           bookmarks: 0,
+        },
+        interactionStatus: {
+          isLiked: false,
+          isReposted: false,
+          isBookmarked: false,
         },
       },
     ]);

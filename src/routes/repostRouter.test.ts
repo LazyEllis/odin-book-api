@@ -17,9 +17,12 @@ describe("PUT /users/me/reposts/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const repostedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const repostedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(repostedPostRes.body._count.reposts).toBe(1);
+    expect(repostedPostRes.body.interactionStatus.isReposted).toBe(true);
   });
 
   it("is idempotent", async () => {
@@ -40,9 +43,12 @@ describe("PUT /users/me/reposts/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const repostedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const repostedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(repostedPostRes.body._count.reposts).toBe(1);
+    expect(repostedPostRes.body.interactionStatus.isReposted).toBe(true);
   });
 
   it("returns a 422 error if the post ID is not an integer", async () => {
@@ -99,9 +105,12 @@ describe("DELETE /users/me/reposts/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const repostedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const repostedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(repostedPostRes.body._count.reposts).toBe(0);
+    expect(repostedPostRes.body.interactionStatus.isReposted).toBe(false);
   });
 
   it("is idempotent", async () => {
@@ -117,9 +126,12 @@ describe("DELETE /users/me/reposts/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const repostedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const repostedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(repostedPostRes.body._count.reposts).toBe(0);
+    expect(repostedPostRes.body.interactionStatus.isReposted).toBe(false);
   });
 
   it("returns a 422 error if the post ID is not an integer", async () => {

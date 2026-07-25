@@ -35,6 +35,11 @@ describe("POST /posts", () => {
         quotes: 0,
         bookmarks: 0,
       },
+      interactionStatus: {
+        isLiked: false,
+        isReposted: false,
+        isBookmarked: false,
+      },
     });
   });
 
@@ -88,6 +93,11 @@ describe("POST /posts", () => {
         quotes: 0,
         bookmarks: 0,
       },
+      interactionStatus: {
+        isLiked: false,
+        isReposted: false,
+        isBookmarked: false,
+      },
     });
   });
 
@@ -140,6 +150,11 @@ describe("POST /posts", () => {
         likes: 0,
         quotes: 0,
         bookmarks: 0,
+      },
+      interactionStatus: {
+        isLiked: false,
+        isReposted: false,
+        isBookmarked: false,
       },
     });
   });
@@ -209,6 +224,11 @@ describe("POST /posts", () => {
         quotes: 0,
         bookmarks: 0,
       },
+      interactionStatus: {
+        isLiked: false,
+        isReposted: false,
+        isBookmarked: false,
+      },
     });
   });
 
@@ -269,6 +289,11 @@ describe("POST /posts", () => {
         likes: 0,
         quotes: 0,
         bookmarks: 0,
+      },
+      interactionStatus: {
+        isLiked: false,
+        isReposted: false,
+        isBookmarked: false,
       },
     });
   });
@@ -390,7 +415,6 @@ describe("GET /posts", () => {
             username: user.username,
             profileImageUrl: user.profileImageUrl,
           },
-
           conversationId: null,
           repliedTo: null,
           quotedPost: null,
@@ -400,6 +424,11 @@ describe("GET /posts", () => {
             likes: 0,
             quotes: 0,
             bookmarks: 0,
+          },
+          interactionStatus: {
+            isLiked: false,
+            isReposted: false,
+            isBookmarked: false,
           },
         },
         {
@@ -422,6 +451,11 @@ describe("GET /posts", () => {
             likes: 0,
             quotes: 0,
             bookmarks: 0,
+          },
+          interactionStatus: {
+            isLiked: false,
+            isReposted: false,
+            isBookmarked: false,
           },
         },
       ]),
@@ -463,6 +497,11 @@ describe("GET /posts/:postId", () => {
         likes: 0,
         quotes: 0,
         bookmarks: 0,
+      },
+      interactionStatus: {
+        isLiked: false,
+        isReposted: false,
+        isBookmarked: false,
       },
     });
   });
@@ -616,6 +655,11 @@ describe("GET /posts/:postId/replies", () => {
           quotes: 0,
           bookmarks: 0,
         },
+        interactionStatus: {
+          isLiked: false,
+          isReposted: false,
+          isBookmarked: false,
+        },
       },
     ]);
   });
@@ -698,6 +742,11 @@ describe("GET /posts/:postId/quotes", () => {
           likes: 0,
           quotes: 0,
           bookmarks: 0,
+        },
+        interactionStatus: {
+          isLiked: false,
+          isReposted: false,
+          isBookmarked: false,
         },
       },
     ]);

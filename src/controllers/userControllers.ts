@@ -5,7 +5,12 @@ import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
 import { prisma } from "../lib/prisma.ts";
 import { BadRequestError, NotFoundError } from "../lib/errors.ts";
 import { getAuthenticatedUser } from "../lib/auth.ts";
-import { postFields, selectUserFields, transformUser } from "../lib/selects.ts";
+import {
+  selectPostFields,
+  selectUserFields,
+  transformPost,
+  transformUser,
+} from "../lib/selects.ts";
 import { generateGravatarURL } from "../lib/gravatar.ts";
 
 export const listUsers: RequestHandler = async (req, res) => {
@@ -137,15 +142,17 @@ export const getUserByUsername: RequestHandler = async (req, res) => {
 export const listCurrentUserPosts: RequestHandler = async (req, res) => {
   const { id } = getAuthenticatedUser(req.user);
 
-  const posts = await prisma.post.findMany({
+  const rawPosts = await prisma.post.findMany({
     where: {
       authorId: id,
     },
-    ...postFields,
+    ...selectPostFields(id),
     orderBy: {
       createdAt: "desc",
     },
   });
+
+  const posts = rawPosts.map(transformPost);
 
   res.json(posts);
 };
@@ -163,15 +170,17 @@ export const listUserPosts: RequestHandler = async (req, res) => {
     throw new NotFoundError("User not found");
   }
 
-  const posts = await prisma.post.findMany({
+  const rawPosts = await prisma.post.findMany({
     where: {
       authorId: Number(userId),
     },
-    ...postFields,
+    ...selectPostFields(req.user?.id),
     orderBy: {
       createdAt: "desc",
     },
   });
+
+  const posts = rawPosts.map(transformPost);
 
   res.json(posts);
 };
@@ -195,7 +204,7 @@ export const listUserLikes: RequestHandler = async (req, res) => {
     },
     select: {
       post: {
-        ...postFields,
+        ...selectPostFields(req.user?.id),
       },
     },
     orderBy: {
@@ -203,7 +212,7 @@ export const listUserLikes: RequestHandler = async (req, res) => {
     },
   });
 
-  const likedPosts = likes.map((like) => like.post);
+  const likedPosts = likes.map((like) => transformPost(like.post));
 
   res.json(likedPosts);
 };

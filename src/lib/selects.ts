@@ -1,3 +1,4 @@
+import type { Prisma } from "../generated/prisma/client.ts";
 import type {
   PostInclude,
   PostOmit,
@@ -5,31 +6,9 @@ import type {
   UserOmit,
 } from "../generated/prisma/models.ts";
 
-interface UserShape {
-  id: number;
-  name: string;
-  username: string;
-  createdAt: Date;
-  description: string | null;
-  location: string | null;
-  profileImageUrl: string | null;
-  url: string | null;
-  pinnedPostId: number | null;
-  _count: {
-    followers: number;
-    following: number;
-  };
-  followers?: {
-    followerId: number;
-    followingId: number;
-    followedAt: Date;
-  }[];
-  following?: {
-    followerId: number;
-    followingId: number;
-    followedAt: Date;
-  }[];
-}
+type UserPayload = Prisma.UserGetPayload<ReturnType<typeof selectUserFields>>;
+
+type PostPayload = Prisma.PostGetPayload<ReturnType<typeof selectPostFields>>;
 
 export const selectUserFields = (userId?: number) =>
   ({
@@ -46,91 +25,111 @@ export const selectUserFields = (userId?: number) =>
       },
       ...(userId && {
         followers: {
-          where: {
-            followerId: userId,
-          },
+          where: { followerId: userId },
         },
-      }),
-      ...(userId && {
         following: {
-          where: {
-            followingId: userId,
-          },
+          where: { followingId: userId },
         },
       }),
     },
   }) satisfies { omit: UserOmit; include: UserInclude };
 
-export const postFields = {
-  omit: {
-    authorId: true,
-    inReplyToPostId: true,
-    quotedPostId: true,
-  },
-  include: {
-    author: {
-      select: {
-        id: true,
-        name: true,
-        username: true,
-        profileImageUrl: true,
-      },
+export const selectPostFields = (userId?: number) =>
+  ({
+    omit: {
+      authorId: true,
+      inReplyToPostId: true,
+      quotedPostId: true,
     },
-    repliedTo: {
-      select: {
-        id: true,
-        text: true,
-        attachment: true,
-        createdAt: true,
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-            profileImageUrl: true,
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          profileImageUrl: true,
+        },
+      },
+      repliedTo: {
+        select: {
+          id: true,
+          text: true,
+          attachment: true,
+          createdAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              profileImageUrl: true,
+            },
           },
         },
       },
-    },
-    quotedPost: {
-      select: {
-        id: true,
-        text: true,
-        attachment: true,
-        createdAt: true,
-        author: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-            profileImageUrl: true,
+      quotedPost: {
+        select: {
+          id: true,
+          text: true,
+          attachment: true,
+          createdAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              profileImageUrl: true,
+            },
           },
         },
       },
-    },
-    _count: {
-      select: {
-        reposts: true,
-        replies: true,
-        likes: true,
-        quotes: true,
-        bookmarks: true,
+      _count: {
+        select: {
+          reposts: true,
+          replies: true,
+          likes: true,
+          quotes: true,
+          bookmarks: true,
+        },
       },
+      ...(userId && {
+        likes: {
+          where: { userId },
+        },
+        reposts: {
+          where: { userId },
+        },
+        bookmarks: {
+          where: { userId },
+        },
+      }),
     },
-  },
-} satisfies {
-  omit: PostOmit;
-  include: PostInclude;
-};
+  }) satisfies {
+    omit: PostOmit;
+    include: PostInclude;
+  };
 
 export const transformUser = ({
   followers,
   following,
   ...rest
-}: UserShape) => ({
+}: UserPayload) => ({
   ...rest,
   connectionStatus: {
-    isFollower: following ? following.length > 0 : false,
-    isFollowing: followers ? followers.length > 0 : false,
+    isFollower: !!following && following.length > 0,
+    isFollowing: !!followers && followers.length > 0,
+  },
+});
+
+export const transformPost = ({
+  likes,
+  reposts,
+  bookmarks,
+  ...rest
+}: PostPayload) => ({
+  ...rest,
+  interactionStatus: {
+    isLiked: !!likes && likes.length > 0,
+    isReposted: !!reposts && reposts.length > 0,
+    isBookmarked: !!bookmarks && bookmarks.length > 0,
   },
 });

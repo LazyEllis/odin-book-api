@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth } from "../lib/auth.ts";
+import { optionalAuth, requireAuth } from "../lib/auth.ts";
 import {
   createPost,
   deletePost,
@@ -14,20 +14,35 @@ import { validatePost, validatePostId } from "../validators/postValidators.ts";
 
 const postRouter = Router();
 
-postRouter.get("/", listPosts);
+postRouter.get("/", optionalAuth, listPosts);
 
 postRouter.post("/", requireAuth, validatePost, createPost);
 
-postRouter.get("/:postId", validatePostId, getPostById);
+postRouter.get("/:postId", optionalAuth, validatePostId, getPostById);
 
 postRouter.delete("/:postId", requireAuth, validatePostId, deletePost);
 
-postRouter.get("/:postId/replies", validatePostId, listPostReplies);
+postRouter.get(
+  "/:postId/replies",
+  optionalAuth,
+  validatePostId,
+  listPostReplies,
+);
 
-postRouter.get("/:postId/quotes", validatePostId, listPostQuotes);
+postRouter.get("/:postId/quotes", optionalAuth, validatePostId, listPostQuotes);
 
-postRouter.get("/:postId/reposted_by", validatePostId, listPostReposters);
+postRouter.get(
+  "/:postId/reposted_by",
+  optionalAuth,
+  validatePostId,
+  listPostReposters,
+);
 
-postRouter.get("/:postId/liking_users", validatePostId, listPostLikers);
+postRouter.get(
+  "/:postId/liking_users",
+  optionalAuth,
+  validatePostId,
+  listPostLikers,
+);
 
 export default postRouter;

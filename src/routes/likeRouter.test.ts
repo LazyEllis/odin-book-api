@@ -49,6 +49,11 @@ describe("GET /users/me/likes", () => {
           quotes: 0,
           bookmarks: 0,
         },
+        interactionStatus: {
+          isLiked: true,
+          isReposted: false,
+          isBookmarked: false,
+        },
       },
     ]);
   });
@@ -68,9 +73,12 @@ describe("PUT /users/me/likes/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const likedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const likedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(likedPostRes.body._count.likes).toBe(1);
+    expect(likedPostRes.body.interactionStatus.isLiked).toBe(true);
   });
 
   it("is idempotent when liking an already liked post", async () => {
@@ -91,9 +99,12 @@ describe("PUT /users/me/likes/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const pinnedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const likedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
-    expect(pinnedPostRes.body._count.likes).toBe(1);
+    expect(likedPostRes.body._count.likes).toBe(1);
+    expect(likedPostRes.body.interactionStatus.isLiked).toBe(true);
   });
 
   it("returns a 422 error if the post ID is not an integer", async () => {
@@ -150,9 +161,12 @@ describe("DELETE /users/me/likes/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const likedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const likedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(likedPostRes.body._count.likes).toBe(0);
+    expect(likedPostRes.body.interactionStatus.isLiked).toBe(false);
   });
 
   it("is idempotent when unliking a post that hasn't been liked", async () => {
@@ -168,9 +182,12 @@ describe("DELETE /users/me/likes/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const pinnedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const likedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
-    expect(pinnedPostRes.body._count.likes).toBe(0);
+    expect(likedPostRes.body._count.likes).toBe(0);
+    expect(likedPostRes.body.interactionStatus.isLiked).toBe(false);
   });
 
   it("returns a 422 error if the post ID is not an integer", async () => {

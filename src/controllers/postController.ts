@@ -2,15 +2,22 @@ import type { RequestHandler } from "express";
 import { prisma } from "../lib/prisma.ts";
 import { ForbiddenError, NotFoundError } from "../lib/errors.ts";
 import { getAuthenticatedUser } from "../lib/auth.ts";
-import { postFields, selectUserFields, transformUser } from "../lib/selects.ts";
+import {
+  selectPostFields,
+  selectUserFields,
+  transformPost,
+  transformUser,
+} from "../lib/selects.ts";
 
 export const listPosts: RequestHandler = async (req, res) => {
-  const posts = await prisma.post.findMany({
-    ...postFields,
+  const rawPosts = await prisma.post.findMany({
+    ...selectPostFields(req.user?.id),
     orderBy: {
       createdAt: "desc",
     },
   });
+
+  const posts = rawPosts.map(transformPost);
 
   res.json(posts);
 };
@@ -20,7 +27,7 @@ export const createPost: RequestHandler = async (req, res) => {
   const { text, inReplyToPostId, quotedPostId } = req.body;
   const { conversationId } = res.locals;
 
-  const post = await prisma.post.create({
+  const rawPost = await prisma.post.create({
     data: {
       text,
       authorId: id,
@@ -28,8 +35,10 @@ export const createPost: RequestHandler = async (req, res) => {
       conversationId,
       quotedPostId,
     },
-    ...postFields,
+    ...selectPostFields(id),
   });
+
+  const post = transformPost(rawPost);
 
   res.status(201).json(post);
 };
@@ -37,16 +46,18 @@ export const createPost: RequestHandler = async (req, res) => {
 export const getPostById: RequestHandler = async (req, res) => {
   const { postId } = req.params;
 
-  const post = await prisma.post.findUnique({
+  const rawPost = await prisma.post.findUnique({
     where: {
       id: Number(postId),
     },
-    ...postFields,
+    ...selectPostFields(req.user?.id),
   });
 
-  if (!post) {
+  if (!rawPost) {
     throw new NotFoundError("Post not found");
   }
+
+  const post = transformPost(rawPost);
 
   res.json(post);
 };
@@ -91,12 +102,14 @@ export const listPostReplies: RequestHandler = async (req, res) => {
     throw new NotFoundError("Post not found");
   }
 
-  const replies = await prisma.post.findMany({
+  const rawReplies = await prisma.post.findMany({
     where: {
       inReplyToPostId: Number(postId),
     },
-    ...postFields,
+    ...selectPostFields(req.user?.id),
   });
+
+  const replies = rawReplies.map(transformPost);
 
   res.json(replies);
 };
@@ -114,12 +127,14 @@ export const listPostQuotes: RequestHandler = async (req, res) => {
     throw new NotFoundError("Post not found");
   }
 
-  const quotes = await prisma.post.findMany({
+  const rawQuotes = await prisma.post.findMany({
     where: {
       quotedPostId: Number(postId),
     },
-    ...postFields,
+    ...selectPostFields(req.user?.id),
   });
+
+  const quotes = rawQuotes.map(transformPost);
 
   res.json(quotes);
 };

@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import { prisma } from "../lib/prisma.ts";
 import { NotFoundError } from "../lib/errors.ts";
 import { getAuthenticatedUser } from "../lib/auth.ts";
-import { postFields } from "../lib/selects.ts";
+import { selectPostFields, transformPost } from "../lib/selects.ts";
 
 export const listCurrentUserLikes: RequestHandler = async (req, res) => {
   const { id } = getAuthenticatedUser(req.user);
@@ -13,7 +13,7 @@ export const listCurrentUserLikes: RequestHandler = async (req, res) => {
     },
     select: {
       post: {
-        ...postFields,
+        ...selectPostFields(id),
       },
     },
     orderBy: {
@@ -21,7 +21,7 @@ export const listCurrentUserLikes: RequestHandler = async (req, res) => {
     },
   });
 
-  const likedPosts = likes.map((like) => like.post);
+  const likedPosts = likes.map((like) => transformPost(like.post));
 
   res.json(likedPosts);
 };

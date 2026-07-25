@@ -49,6 +49,11 @@ describe("GET /users/me/bookmarks", () => {
           quotes: 0,
           bookmarks: 1,
         },
+        interactionStatus: {
+          isLiked: false,
+          isReposted: false,
+          isBookmarked: true,
+        },
       },
     ]);
   });
@@ -68,11 +73,12 @@ describe("PUT /users/me/bookmarks/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const bookmarkedPostRes = await request(app).get(
-      `/posts/${postRes.body.id}`,
-    );
+    const bookmarkedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(bookmarkedPostRes.body._count.bookmarks).toBe(1);
+    expect(bookmarkedPostRes.body.interactionStatus.isBookmarked).toBe(true);
   });
 
   it("is idempotent when bookmarking an already bookmarked post", async () => {
@@ -93,9 +99,12 @@ describe("PUT /users/me/bookmarks/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const pinnedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const bookmarkedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
-    expect(pinnedPostRes.body._count.bookmarks).toBe(1);
+    expect(bookmarkedPostRes.body._count.bookmarks).toBe(1);
+    expect(bookmarkedPostRes.body.interactionStatus.isBookmarked).toBe(true);
   });
 
   it("returns a 422 error if the post ID is not an integer", async () => {
@@ -152,11 +161,12 @@ describe("DELETE /users/me/bookmarks/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const bookmarkedPostRes = await request(app).get(
-      `/posts/${postRes.body.id}`,
-    );
+    const bookmarkedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
     expect(bookmarkedPostRes.body._count.bookmarks).toBe(0);
+    expect(bookmarkedPostRes.body.interactionStatus.isBookmarked).toBe(false);
   });
 
   it("is idempotent when removing a bookmark from a post that hasn't been bookmarked", async () => {
@@ -172,9 +182,12 @@ describe("DELETE /users/me/bookmarks/:postId", () => {
       .auth(token, { type: "bearer" })
       .expect(204);
 
-    const pinnedPostRes = await request(app).get(`/posts/${postRes.body.id}`);
+    const bookmarkedPostRes = await request(app)
+      .get(`/posts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
 
-    expect(pinnedPostRes.body._count.bookmarks).toBe(0);
+    expect(bookmarkedPostRes.body._count.bookmarks).toBe(0);
+    expect(bookmarkedPostRes.body.interactionStatus.isBookmarked).toBe(false);
   });
 
   it("returns a 422 error if the post ID is not an integer", async () => {
