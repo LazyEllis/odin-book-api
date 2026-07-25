@@ -1,7 +1,54 @@
-import { describe, it, expect } from "vitest";
+import type { Request } from "express";
+import { type AuthenticateOptions, Strategy } from "passport";
+import { describe, it, expect, vi } from "vitest";
 import request from "supertest";
 import app from "../tests/app.ts";
-import { redis } from "../lib/redis.ts";
+
+interface VerifyCallback {
+  (
+    accessToken: string,
+    refreshToken: string,
+    profile: typeof mockUser,
+    done: (a: unknown, user: typeof mockUser) => void,
+  ): void;
+}
+
+const mockUser = vi.hoisted(() => ({
+  id: "1234",
+  displayName: "John Doe",
+  username: "john_doe",
+  photos: [{ value: "some_photo.jpg" }],
+  profileUrl: "https://github.com/john_doe",
+}));
+
+vi.mock("passport-github2", () => ({
+  Strategy: class extends Strategy {
+    cb: VerifyCallback;
+
+    constructor(_name: string, cb: VerifyCallback) {
+      super();
+      this.name = "github";
+      this.cb = cb;
+    }
+
+    authenticate(req: Request, options: AuthenticateOptions) {
+      if (!req.query?.code) {
+        const params = new URLSearchParams({
+          client_id: String(process.env.GITHUB_CLIENT_ID),
+          scope: String(options.scope),
+        });
+
+        return this.redirect(
+          `https://github.com/login/oauth/authorize?${params.toString()}`,
+        );
+      }
+
+      this.cb("N/A", "N/A", mockUser, (_err, user) => {
+        this.success({ ...user, id: Number(user.id) });
+      });
+    }
+  },
+}));
 
 describe("POST /auth/token", () => {
   it("returns a JWT on success", async () => {
@@ -71,12 +118,51 @@ describe("GET /auth/github", () => {
   });
 });
 
+describe("GET /auth/github/callback", () => {
+  it("redirects to frontend with a code param", async () => {
+    const res = await request(app).get("/auth/github/callback?code=test_code");
+    const location = new URL(res.headers.location);
+
+    expect(location.origin).toBe(process.env.FRONTEND_URL);
+    expect(location.pathname).toBe("/oauth/callback");
+    expect(location.searchParams.get("code")).toEqual(expect.any(String));
+  });
+
+  it("creates a user on success", async () => {
+    await request(app).get("/auth/github/callback?code=test_code");
+
+    const res = await request(app).get(
+      `/users/by/username/${mockUser.username}`,
+    );
+
+    expect(res.body).toEqual({
+      id: expect.any(Number),
+      name: mockUser.displayName,
+      username: mockUser.username,
+      createdAt: expect.any(String),
+      description: null,
+      location: null,
+      profileImageUrl: mockUser.photos[0].value,
+      url: mockUser.profileUrl,
+      pinnedPostId: null,
+      _count: {
+        followers: 0,
+        following: 0,
+      },
+      connectionStatus: {
+        isFollower: false,
+        isFollowing: false,
+      },
+    });
+  });
+});
+
 describe("POST /auth/exchange", () => {
   it("returns a JWT for a valid code", async () => {
-    const code = "test-code-123";
-    await redis.set(`oauth:${code}`, JSON.stringify({ id: 1 }), {
-      expiration: { type: "EX", value: 60 },
-    });
+    const callbackRes = await request(app).get(
+      "/auth/github/callback?code=test_code",
+    );
+    const code = new URL(callbackRes.headers.location).searchParams.get("code");
 
     const res = await request(app)
       .post("/auth/exchange")
@@ -88,10 +174,10 @@ describe("POST /auth/exchange", () => {
   });
 
   it("deletes the code after single use", async () => {
-    const code = "test-code-123";
-    await redis.set(`oauth:${code}`, JSON.stringify({ id: 1 }), {
-      expiration: { type: "EX", value: 60 },
-    });
+    const callbackRes = await request(app).get(
+      "/auth/github/callback?code=test_code",
+    );
+    const code = new URL(callbackRes.headers.location).searchParams.get("code");
 
     await request(app).post("/auth/exchange").send({ code });
 

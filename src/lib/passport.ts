@@ -18,11 +18,13 @@ if (!process.env.JWT_SECRET) {
 }
 
 if (!process.env.GITHUB_CLIENT_ID) {
-  throw new Error("JWT_SECRET is not defined in environmental variables");
+  throw new Error("GITHUB_CLIENT_ID is not defined in environmental variables");
 }
 
 if (!process.env.GITHUB_CLIENT_SECRET) {
-  throw new Error("JWT_SECRET is not defined in environmental variables");
+  throw new Error(
+    "GITHUB_CLIENT_SECRET is not defined in environmental variables",
+  );
 }
 
 // Adds a suffix to a GitHub username when the username is already occupied in the DB.
@@ -82,8 +84,8 @@ passport.use(
       callbackURL: "/auth/github/callback",
     },
     async (
-      accessToken: string,
-      refreshToken: string,
+      _accessToken: string,
+      _refreshToken: string,
       profile: GitHubProfile,
       done: DoneCallback,
     ) => {
