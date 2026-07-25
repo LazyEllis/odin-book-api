@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import { prisma } from "../config/prisma.ts";
 import { NotFoundError } from "../utils/errors.ts";
 import { getAuthenticatedUser } from "../middlewares/auth.ts";
-import { selectPostFields, transformPost } from "../utils/selects.ts";
+import { buildPostSelect, mapToPostResponse } from "../mappers/postMapper.ts";
 
 export const listBookmarks: RequestHandler = async (req, res) => {
   const { id } = getAuthenticatedUser(req.user);
@@ -13,7 +13,7 @@ export const listBookmarks: RequestHandler = async (req, res) => {
     },
     select: {
       post: {
-        ...selectPostFields(id),
+        ...buildPostSelect(id),
       },
     },
     orderBy: {
@@ -22,7 +22,7 @@ export const listBookmarks: RequestHandler = async (req, res) => {
   });
 
   const bookmarkedPosts = bookmarks.map((bookmark) =>
-    transformPost(bookmark.post),
+    mapToPostResponse(bookmark.post),
   );
 
   res.json(bookmarkedPosts);

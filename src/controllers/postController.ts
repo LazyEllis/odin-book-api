@@ -2,22 +2,18 @@ import type { RequestHandler } from "express";
 import { prisma } from "../config/prisma.ts";
 import { ForbiddenError, NotFoundError } from "../utils/errors.ts";
 import { getAuthenticatedUser } from "../middlewares/auth.ts";
-import {
-  selectPostFields,
-  selectUserFields,
-  transformPost,
-  transformUser,
-} from "../utils/selects.ts";
+import { buildPostSelect, mapToPostResponse } from "../mappers/postMapper.ts";
+import { buildUserSelect, mapToUserResponse } from "../mappers/userMapper.ts";
 
 export const listPosts: RequestHandler = async (req, res) => {
   const rawPosts = await prisma.post.findMany({
-    ...selectPostFields(req.user?.id),
+    ...buildPostSelect(req.user?.id),
     orderBy: {
       createdAt: "desc",
     },
   });
 
-  const posts = rawPosts.map(transformPost);
+  const posts = rawPosts.map(mapToPostResponse);
 
   res.json(posts);
 };
@@ -35,10 +31,10 @@ export const createPost: RequestHandler = async (req, res) => {
       conversationId,
       quotedPostId,
     },
-    ...selectPostFields(id),
+    ...buildPostSelect(id),
   });
 
-  const post = transformPost(rawPost);
+  const post = mapToPostResponse(rawPost);
 
   res.status(201).json(post);
 };
@@ -50,14 +46,14 @@ export const getPostById: RequestHandler = async (req, res) => {
     where: {
       id: Number(postId),
     },
-    ...selectPostFields(req.user?.id),
+    ...buildPostSelect(req.user?.id),
   });
 
   if (!rawPost) {
     throw new NotFoundError("Post not found");
   }
 
-  const post = transformPost(rawPost);
+  const post = mapToPostResponse(rawPost);
 
   res.json(post);
 };
@@ -106,10 +102,10 @@ export const listPostReplies: RequestHandler = async (req, res) => {
     where: {
       inReplyToPostId: Number(postId),
     },
-    ...selectPostFields(req.user?.id),
+    ...buildPostSelect(req.user?.id),
   });
 
-  const replies = rawReplies.map(transformPost);
+  const replies = rawReplies.map(mapToPostResponse);
 
   res.json(replies);
 };
@@ -131,10 +127,10 @@ export const listPostQuotes: RequestHandler = async (req, res) => {
     where: {
       quotedPostId: Number(postId),
     },
-    ...selectPostFields(req.user?.id),
+    ...buildPostSelect(req.user?.id),
   });
 
-  const quotes = rawQuotes.map(transformPost);
+  const quotes = rawQuotes.map(mapToPostResponse);
 
   res.json(quotes);
 };
@@ -158,12 +154,14 @@ export const listPostReposters: RequestHandler = async (req, res) => {
     },
     select: {
       user: {
-        ...selectUserFields(req.user?.id),
+        ...buildUserSelect(req.user?.id),
       },
     },
   });
 
-  const repostingUsers = reposts.map((repost) => transformUser(repost.user));
+  const repostingUsers = reposts.map((repost) =>
+    mapToUserResponse(repost.user),
+  );
 
   res.json(repostingUsers);
 };
@@ -187,12 +185,12 @@ export const listPostLikers: RequestHandler = async (req, res) => {
     },
     select: {
       user: {
-        ...selectUserFields(req.user?.id),
+        ...buildUserSelect(req.user?.id),
       },
     },
   });
 
-  const likingUsers = likes.map((like) => transformUser(like.user));
+  const likingUsers = likes.map((like) => mapToUserResponse(like.user));
 
   res.json(likingUsers);
 };

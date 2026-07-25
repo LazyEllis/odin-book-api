@@ -3,25 +3,21 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
 import { prisma } from "../config/prisma.ts";
-import { BadRequestError, NotFoundError } from "../utils/errors.ts";
 import { getAuthenticatedUser } from "../middlewares/auth.ts";
-import {
-  selectPostFields,
-  selectUserFields,
-  transformPost,
-  transformUser,
-} from "../utils/selects.ts";
+import { buildPostSelect, mapToPostResponse } from "../mappers/postMapper.ts";
+import { buildUserSelect, mapToUserResponse } from "../mappers/userMapper.ts";
+import { BadRequestError, NotFoundError } from "../utils/errors.ts";
 import { generateGravatarURL } from "../utils/gravatar.ts";
 
 export const listUsers: RequestHandler = async (req, res) => {
   const rawUsers = await prisma.user.findMany({
-    ...selectUserFields(req.user?.id),
+    ...buildUserSelect(req.user?.id),
     orderBy: {
       username: "asc",
     },
   });
 
-  const users = rawUsers.map(transformUser);
+  const users = rawUsers.map(mapToUserResponse);
 
   res.json(users);
 };
@@ -44,10 +40,10 @@ export const createUser: RequestHandler = async (req, res) => {
       password: hashedPassword,
       profileImageUrl,
     },
-    ...selectUserFields(),
+    ...buildUserSelect(),
   });
 
-  const user = transformUser(rawUser);
+  const user = mapToUserResponse(rawUser);
 
   const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, {
     expiresIn: "24h",
@@ -63,14 +59,14 @@ export const getCurrentUser: RequestHandler = async (req, res) => {
     where: {
       id,
     },
-    ...selectUserFields(req.user?.id),
+    ...buildUserSelect(req.user?.id),
   });
 
   if (!rawUser) {
     throw new NotFoundError("User not found");
   }
 
-  const user = transformUser(rawUser);
+  const user = mapToUserResponse(rawUser);
 
   res.json(user);
 };
@@ -90,10 +86,10 @@ export const updateCurrentUser: RequestHandler = async (req, res) => {
     where: {
       id,
     },
-    ...selectUserFields(req.user?.id),
+    ...buildUserSelect(req.user?.id),
   });
 
-  const updatedUser = transformUser(user);
+  const updatedUser = mapToUserResponse(user);
 
   res.json(updatedUser);
 };
@@ -105,14 +101,14 @@ export const getUserById: RequestHandler = async (req, res) => {
     where: {
       id: Number(userId),
     },
-    ...selectUserFields(req.user?.id),
+    ...buildUserSelect(req.user?.id),
   });
 
   if (!rawUser) {
     throw new NotFoundError("User not found");
   }
 
-  const user = transformUser(rawUser);
+  const user = mapToUserResponse(rawUser);
 
   res.json(user);
 };
@@ -127,14 +123,14 @@ export const getUserByUsername: RequestHandler = async (req, res) => {
         mode: "insensitive",
       },
     },
-    ...selectUserFields(req.user?.id),
+    ...buildUserSelect(req.user?.id),
   });
 
   if (!rawUser) {
     throw new NotFoundError("User not found");
   }
 
-  const user = transformUser(rawUser);
+  const user = mapToUserResponse(rawUser);
 
   res.json(user);
 };
@@ -146,13 +142,13 @@ export const listCurrentUserPosts: RequestHandler = async (req, res) => {
     where: {
       authorId: id,
     },
-    ...selectPostFields(id),
+    ...buildPostSelect(id),
     orderBy: {
       createdAt: "desc",
     },
   });
 
-  const posts = rawPosts.map(transformPost);
+  const posts = rawPosts.map(mapToPostResponse);
 
   res.json(posts);
 };
@@ -174,13 +170,13 @@ export const listUserPosts: RequestHandler = async (req, res) => {
     where: {
       authorId: Number(userId),
     },
-    ...selectPostFields(req.user?.id),
+    ...buildPostSelect(req.user?.id),
     orderBy: {
       createdAt: "desc",
     },
   });
 
-  const posts = rawPosts.map(transformPost);
+  const posts = rawPosts.map(mapToPostResponse);
 
   res.json(posts);
 };
@@ -204,7 +200,7 @@ export const listUserLikes: RequestHandler = async (req, res) => {
     },
     select: {
       post: {
-        ...selectPostFields(req.user?.id),
+        ...buildPostSelect(req.user?.id),
       },
     },
     orderBy: {
@@ -212,7 +208,7 @@ export const listUserLikes: RequestHandler = async (req, res) => {
     },
   });
 
-  const likedPosts = likes.map((like) => transformPost(like.post));
+  const likedPosts = likes.map((like) => mapToPostResponse(like.post));
 
   res.json(likedPosts);
 };
@@ -236,12 +232,14 @@ export const listUserFollowing: RequestHandler = async (req, res) => {
     },
     select: {
       following: {
-        ...selectUserFields(req.user?.id),
+        ...buildUserSelect(req.user?.id),
       },
     },
   });
 
-  const following = follows.map((follow) => transformUser(follow.following));
+  const following = follows.map((follow) =>
+    mapToUserResponse(follow.following),
+  );
 
   res.json(following);
 };
@@ -255,12 +253,12 @@ export const listCurrentUserFollowers: RequestHandler = async (req, res) => {
     },
     select: {
       follower: {
-        ...selectUserFields(id),
+        ...buildUserSelect(id),
       },
     },
   });
 
-  const followers = follows.map((follow) => transformUser(follow.follower));
+  const followers = follows.map((follow) => mapToUserResponse(follow.follower));
 
   res.json(followers);
 };
@@ -284,12 +282,12 @@ export const listUserFollowers: RequestHandler = async (req, res) => {
     },
     select: {
       follower: {
-        ...selectUserFields(req.user?.id),
+        ...buildUserSelect(req.user?.id),
       },
     },
   });
 
-  const followers = follows.map((follow) => transformUser(follow.follower));
+  const followers = follows.map((follow) => mapToUserResponse(follow.follower));
 
   res.json(followers);
 };
@@ -323,10 +321,10 @@ export const uploadProfileImage: RequestHandler = async (req, res) => {
     data: {
       profileImageUrl: image.secure_url,
     },
-    ...selectUserFields(req.user?.id),
+    ...buildUserSelect(req.user?.id),
   });
 
-  const updatedUser = transformUser(rawUser);
+  const updatedUser = mapToUserResponse(rawUser);
 
   res.json(updatedUser);
 };

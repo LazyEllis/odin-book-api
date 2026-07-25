@@ -2,7 +2,7 @@ import type { RequestHandler } from "express";
 import { prisma } from "../config/prisma.ts";
 import { NotFoundError } from "../utils/errors.ts";
 import { getAuthenticatedUser } from "../middlewares/auth.ts";
-import { selectUserFields, transformUser } from "../utils/selects.ts";
+import { buildUserSelect, mapToUserResponse } from "../mappers/userMapper.ts";
 
 export const listCurrentUserFollowing: RequestHandler = async (req, res) => {
   const { id } = getAuthenticatedUser(req.user);
@@ -13,12 +13,14 @@ export const listCurrentUserFollowing: RequestHandler = async (req, res) => {
     },
     select: {
       following: {
-        ...selectUserFields(id),
+        ...buildUserSelect(id),
       },
     },
   });
 
-  const following = follows.map((follow) => transformUser(follow.following));
+  const following = follows.map((follow) =>
+    mapToUserResponse(follow.following),
+  );
 
   res.json(following);
 };
