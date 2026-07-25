@@ -1,5 +1,5 @@
 import passport from "passport";
-import { UnauthorizedError } from "./errors.ts";
+import { UnauthorizedError } from "../utils/errors.ts";
 
 export const requireAuth = passport.authenticate("jwt", {
   session: false,

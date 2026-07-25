@@ -1,6 +1,6 @@
 import multer from "multer";
 import { Router } from "express";
-import { optionalAuth, requireAuth } from "../lib/auth.ts";
+import { optionalAuth, requireAuth } from "../middlewares/auth.ts";
 import {
   validateProfileImage,
   validateUserCreation,

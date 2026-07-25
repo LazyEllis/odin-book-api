@@ -1,6 +1,6 @@
 import { afterEach } from "vitest";
-import { prisma } from "../lib/prisma.ts";
-import { redis } from "../lib/redis.ts";
+import { prisma } from "../config/prisma.ts";
+import { redis } from "../config/redis.ts";
 
 afterEach(async () => {
   await prisma.$executeRawUnsafe(

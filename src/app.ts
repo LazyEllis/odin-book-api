@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import "./lib/passport.ts";
-import { errorHandler } from "./lib/errorHandler.ts";
+import "./config/passport.ts";
+import { errorHandler } from "./middlewares/errorHandler.ts";
 import userRouter from "./routes/userRouter.ts";
 import authRouter from "./routes/authRouter.ts";
 import postRouter from "./routes/postRouter.ts";

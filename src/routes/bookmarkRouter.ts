@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth } from "../lib/auth.ts";
+import { requireAuth } from "../middlewares/auth.ts";
 import { validatePostId } from "../validators/postValidators.ts";
 import {
   bookmarkPost,

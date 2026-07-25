@@ -2,16 +2,16 @@ import type { RequestHandler } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
-import { prisma } from "../lib/prisma.ts";
-import { BadRequestError, NotFoundError } from "../lib/errors.ts";
-import { getAuthenticatedUser } from "../lib/auth.ts";
+import { prisma } from "../config/prisma.ts";
+import { BadRequestError, NotFoundError } from "../utils/errors.ts";
+import { getAuthenticatedUser } from "../middlewares/auth.ts";
 import {
   selectPostFields,
   selectUserFields,
   transformPost,
   transformUser,
-} from "../lib/selects.ts";
-import { generateGravatarURL } from "../lib/gravatar.ts";
+} from "../utils/selects.ts";
+import { generateGravatarURL } from "../utils/gravatar.ts";
 
 export const listUsers: RequestHandler = async (req, res) => {
   const rawUsers = await prisma.user.findMany({

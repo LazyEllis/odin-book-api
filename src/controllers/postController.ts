@@ -1,13 +1,13 @@
 import type { RequestHandler } from "express";
-import { prisma } from "../lib/prisma.ts";
-import { ForbiddenError, NotFoundError } from "../lib/errors.ts";
-import { getAuthenticatedUser } from "../lib/auth.ts";
+import { prisma } from "../config/prisma.ts";
+import { ForbiddenError, NotFoundError } from "../utils/errors.ts";
+import { getAuthenticatedUser } from "../middlewares/auth.ts";
 import {
   selectPostFields,
   selectUserFields,
   transformPost,
   transformUser,
-} from "../lib/selects.ts";
+} from "../utils/selects.ts";
 
 export const listPosts: RequestHandler = async (req, res) => {
   const rawPosts = await prisma.post.findMany({

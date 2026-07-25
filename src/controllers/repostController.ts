@@ -1,7 +1,7 @@
 import type { RequestHandler } from "express";
-import { prisma } from "../lib/prisma.ts";
-import { NotFoundError } from "../lib/errors.ts";
-import { getAuthenticatedUser } from "../lib/auth.ts";
+import { prisma } from "../config/prisma.ts";
+import { NotFoundError } from "../utils/errors.ts";
+import { getAuthenticatedUser } from "../middlewares/auth.ts";
 
 export const repostPost: RequestHandler = async (req, res) => {
   const { id } = getAuthenticatedUser(req.user);

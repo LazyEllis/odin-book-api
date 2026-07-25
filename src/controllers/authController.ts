@@ -3,9 +3,9 @@ import type { RequestHandler } from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import type { IVerifyOptions } from "passport-local";
-import { redis } from "../lib/redis.ts";
-import { UnauthorizedError } from "../lib/errors.ts";
-import { getAuthenticatedUser } from "../lib/auth.ts";
+import { redis } from "../config/redis.ts";
+import { UnauthorizedError } from "../utils/errors.ts";
+import { getAuthenticatedUser } from "../middlewares/auth.ts";
 
 export const generateLocalAuthToken: RequestHandler = (req, res, next) => {
   passport.authenticate(

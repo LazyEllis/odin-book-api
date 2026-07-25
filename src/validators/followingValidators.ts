@@ -1,5 +1,5 @@
 import { param } from "express-validator";
-import { validate } from "../lib/validation.ts";
+import { validate } from "../middlewares/validation.ts";
 
 export const validateUserId = validate([
   param("userId")

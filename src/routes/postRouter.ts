@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { optionalAuth, requireAuth } from "../lib/auth.ts";
+import { optionalAuth, requireAuth } from "../middlewares/auth.ts";
 import {
   createPost,
   deletePost,
