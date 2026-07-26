@@ -31,6 +31,7 @@ This is a REST API for the social media platform inspired by Twitter. It allows 
     FRONTEND_URL="your-frontend-url"
     DATABASE_URL="postgresql://<username>:<password>@localhost:5432/<database>"
     TEST_DATABASE_URL="postgresql://<username>:<password>@localhost:5432/<test_database>"
+    REDIS_URL="redis://localhost:6379"
     JWT_SECRET="your-secret-jwt-key"
     GITHUB_CLIENT_ID="your-github-client-id"
     GITHUB_CLIENT_SECRET="your-github-client-secret"
