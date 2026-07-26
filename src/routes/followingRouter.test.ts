@@ -245,3 +245,65 @@ describe("DELETE /users/me/following/:userId", () => {
       .expect(401);
   });
 });
+
+describe("GET /users/me/following/posts", () => {
+  it("returns a list of posts from users the authenticated user follows on success", async () => {
+    const { token } = await createUser();
+    const { user: follower, token: followerToken } = await createUser({
+      username: "jane_doe",
+    });
+    const { token: nonFollowerToken } = await createUser({
+      username: "john_peter",
+    });
+
+    await request(app)
+      .put(`/users/me/following/${follower.id}`)
+      .auth(token, { type: "bearer" });
+
+    await request(app)
+      .post("/posts")
+      .auth(followerToken, { type: "bearer" })
+      .send({ text: "This post is from a follower" });
+
+    await request(app)
+      .post("/posts")
+      .auth(nonFollowerToken, { type: "bearer" })
+      .send({ text: "This post is not from a follower" });
+
+    const res = await request(app)
+      .get("/users/me/following/posts")
+      .auth(token, { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual([
+      {
+        id: expect.any(Number),
+        text: "This post is from a follower",
+        attachment: null,
+        createdAt: expect.any(String),
+        author: {
+          id: follower.id,
+          name: follower.name,
+          username: follower.username,
+          profileImageUrl: follower.profileImageUrl,
+        },
+        conversationId: null,
+        repliedTo: null,
+        quotedPost: null,
+        _count: {
+          reposts: 0,
+          replies: 0,
+          likes: 0,
+          quotes: 0,
+          bookmarks: 0,
+        },
+        interactionStatus: {
+          isLiked: false,
+          isReposted: false,
+          isBookmarked: false,
+        },
+      },
+    ]);
+  });
+});
