@@ -30,31 +30,26 @@ describe("POST /users", () => {
       .expect(201);
 
     expect(res.body).toEqual({
-      user: {
-        id: expect.any(Number),
-        name: userCreationPayload.name,
-        username: userCreationPayload.username,
-        createdAt: expect.any(String),
-        description: null,
-        location: null,
-        profileImageUrl: expect.any(String),
-        url: null,
-        pinnedPostId: null,
-        _count: {
-          followers: 0,
-          following: 0,
-        },
-        connectionStatus: {
-          isFollower: false,
-          isFollowing: false,
-        },
+      id: expect.any(Number),
+      name: userCreationPayload.name,
+      username: userCreationPayload.username,
+      createdAt: expect.any(String),
+      description: null,
+      location: null,
+      profileImageUrl: expect.any(String),
+      url: null,
+      pinnedPostId: null,
+      _count: {
+        followers: 0,
+        following: 0,
       },
-      token: expect.any(String),
+      connectionStatus: {
+        isFollower: false,
+        isFollowing: false,
+      },
     });
-    expect(Date.parse(res.body.user.createdAt)).not.toBeNaN();
-    expect(new URL(res.body.user.profileImageUrl).hostname).toBe(
-      "www.gravatar.com",
-    );
+    expect(Date.parse(res.body.createdAt)).not.toBeNaN();
+    expect(new URL(res.body.profileImageUrl).hostname).toBe("www.gravatar.com");
   });
 
   it("returns a 422 error when fields are empty", async () => {
@@ -268,33 +263,15 @@ describe("GET /users", () => {
 
 describe("GET /users/me", () => {
   it("returns the authenticated user on success", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { user, token } = await createUser();
 
     const res = await request(app)
       .get("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .expect("Content-Type", /json/)
       .expect(200);
 
-    expect(res.body).toEqual({
-      id: expect.any(Number),
-      name: userCreationPayload.name,
-      username: userCreationPayload.username,
-      createdAt: expect.any(String),
-      description: null,
-      location: null,
-      profileImageUrl: expect.any(String),
-      url: null,
-      pinnedPostId: null,
-      _count: {
-        followers: 0,
-        following: 0,
-      },
-      connectionStatus: {
-        isFollower: false,
-        isFollowing: false,
-      },
-    });
+    expect(res.body).toEqual(user);
   });
 
   it("returns a 401 error if no token is provided", async () => {
@@ -316,105 +293,64 @@ describe("GET /users/me", () => {
 });
 
 describe("PUT /users/me", () => {
-  it("returns the authenticated user on success", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+  it("returns the updated authenticated user on success", async () => {
+    const { user, token } = await createUser();
 
     const res = await request(app)
       .put("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .send(userUpdatePayload)
       .expect("Content-Type", /json/)
       .expect(200);
 
     expect(res.body).toEqual({
-      id: expect.any(Number),
-      name: userUpdatePayload.name,
-      username: userUpdatePayload.username,
-      createdAt: expect.any(String),
-      description: userUpdatePayload.description,
-      location: userUpdatePayload.location,
-      profileImageUrl: expect.any(String),
-      url: userUpdatePayload.url,
-      pinnedPostId: null,
-      _count: {
-        followers: 0,
-        following: 0,
-      },
-      connectionStatus: {
-        isFollower: false,
-        isFollowing: false,
-      },
+      ...user,
+      ...userUpdatePayload,
     });
   });
 
-  it("returns the authenticated user when username is unmodified", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+  it("returns the updated authenticated user when username is unmodified", async () => {
+    const { user, token } = await createUser();
 
     const res = await request(app)
       .put("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
-      .send({ ...userUpdatePayload, username: userCreationPayload.username })
+      .auth(token, { type: "bearer" })
+      .send({ ...userUpdatePayload, username: user.username })
       .expect("Content-Type", /json/)
       .expect(200);
 
     expect(res.body).toEqual({
-      id: expect.any(Number),
-      name: userUpdatePayload.name,
-      username: userCreationPayload.username,
-      createdAt: expect.any(String),
-      description: userUpdatePayload.description,
-      location: userUpdatePayload.location,
-      profileImageUrl: expect.any(String),
-      url: userUpdatePayload.url,
-      pinnedPostId: null,
-      _count: {
-        followers: 0,
-        following: 0,
-      },
-      connectionStatus: {
-        isFollower: false,
-        isFollowing: false,
-      },
+      ...user,
+      ...userUpdatePayload,
+      username: user.username,
     });
   });
 
-  it("returns the authenticated user when optional fields are empty strings", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+  it("returns the updated authenticated user when optional fields are empty strings", async () => {
+    const { user, token } = await createUser();
 
     const res = await request(app)
       .put("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .send({ ...userUpdatePayload, description: "", location: "", url: "" })
       .expect("Content-Type", /json/)
       .expect(200);
 
     expect(res.body).toEqual({
-      id: expect.any(Number),
-      name: userUpdatePayload.name,
-      username: userUpdatePayload.username,
-      createdAt: expect.any(String),
+      ...user,
+      ...userUpdatePayload,
       description: null,
       location: null,
-      profileImageUrl: expect.any(String),
-      pinnedPostId: null,
       url: null,
-      _count: {
-        followers: 0,
-        following: 0,
-      },
-      connectionStatus: {
-        isFollower: false,
-        isFollowing: false,
-      },
     });
   });
 
   it("returns a 422 error when name exceeds 50 characters", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { token } = await createUser();
 
     const res = await request(app)
       .put("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .send({
         ...userUpdatePayload,
         name: "Has Erling Braut Haaland Broken Another Goalscoring Record?",
@@ -430,11 +366,11 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when username is less than 5 characters", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { token } = await createUser();
 
     const res = await request(app)
       .put("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .send({ ...userUpdatePayload, username: "john" })
       .expect("Content-Type", /json/)
       .expect(422);
@@ -447,11 +383,11 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when username exceeds 15 characters", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { token } = await createUser();
 
     const res = await request(app)
       .put("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .send({ ...userUpdatePayload, username: "jonathan_mcdonald" })
       .expect("Content-Type", /json/)
       .expect(422);
@@ -464,11 +400,11 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when username contains spaces", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { token } = await createUser();
 
     const res = await request(app)
       .put("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .send({ ...userUpdatePayload, username: "john doe" })
       .expect("Content-Type", /json/)
       .expect(422);
@@ -481,11 +417,11 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when username contains invalid special characters", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { token } = await createUser();
 
     const res = await request(app)
       .put("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .send({ ...userUpdatePayload, username: "john.doe" })
       .expect("Content-Type", /json/)
       .expect(422);
@@ -498,11 +434,11 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when description exceeds 160 characters", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { token } = await createUser();
 
     const res = await request(app)
       .put("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .send({
         ...userUpdatePayload,
         description:
@@ -519,11 +455,11 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when location exceeds 30 characters", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { token } = await createUser();
 
     const res = await request(app)
       .put("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .send({
         ...userUpdatePayload,
         location: "A really long location is invalid",
@@ -539,11 +475,11 @@ describe("PUT /users/me", () => {
   });
 
   it("returns a 422 error when URL is invalid", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { token } = await createUser();
 
     const res = await request(app)
       .put("/users/me")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .send({ ...userUpdatePayload, url: "Invalid URL" })
       .expect("Content-Type", /json/)
       .expect(422);
@@ -570,7 +506,7 @@ describe("GET /users/:userId", () => {
     const userRes = await request(app).post("/users").send(userCreationPayload);
 
     const res = await request(app)
-      .get(`/users/${userRes.body.user.id}`)
+      .get(`/users/${userRes.body.id}`)
       .expect("Content-Type", /json/)
       .expect(200);
 
@@ -687,13 +623,8 @@ describe("GET /users/by/username/:username", () => {
 
 describe("GET /users/me/posts", () => {
   it("returns the authenticated user's posts on success", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
-
-    const { user, token } = userRes.body;
-
-    const otherUserRes = await request(app)
-      .post("/users")
-      .send({ ...userCreationPayload, name: "Jane Doe", username: "jane_doe" });
+    const { user, token } = await createUser();
+    const otherUserRes = await createUser({ username: "jane_doe" });
 
     await request(app)
       .post("/posts")
@@ -702,12 +633,12 @@ describe("GET /users/me/posts", () => {
 
     await request(app)
       .post("/posts")
-      .auth(otherUserRes.body.token, { type: "bearer" })
+      .auth(otherUserRes.token, { type: "bearer" })
       .send({ text: "This is a post from another user." });
 
     const res = await request(app)
       .get("/users/me/posts")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .expect("Content-Type", /json/)
       .expect(200);
 
@@ -753,17 +684,14 @@ describe("GET /users/me/posts", () => {
 
 describe("GET /users/:userId/posts", () => {
   it("returns a user's posts on success", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
-
-    const otherUserRes = await request(app)
-      .post("/users")
-      .send({ ...userCreationPayload, name: "Jane Doe", username: "jane_doe" });
-
-    const { user, token } = otherUserRes.body;
+    const userRes = await createUser();
+    const { user: otherUser, token } = await createUser({
+      username: "jane_doe",
+    });
 
     await request(app)
       .post("/posts")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(userRes.token, { type: "bearer" })
       .send({ text: "This is my first post." });
 
     await request(app)
@@ -772,7 +700,7 @@ describe("GET /users/:userId/posts", () => {
       .send({ text: "This is a post from another user." });
 
     const res = await request(app)
-      .get(`/users/${user.id}/posts`)
+      .get(`/users/${otherUser.id}/posts`)
       .expect("Content-Type", /json/)
       .expect(200);
 
@@ -783,10 +711,10 @@ describe("GET /users/:userId/posts", () => {
         attachment: null,
         createdAt: expect.any(String),
         author: {
-          id: user.id,
-          name: user.name,
-          username: user.username,
-          profileImageUrl: user.profileImageUrl,
+          id: otherUser.id,
+          name: otherUser.name,
+          username: otherUser.username,
+          profileImageUrl: otherUser.profileImageUrl,
         },
         conversationId: null,
         repliedTo: null,
@@ -1058,11 +986,11 @@ describe("GET /users/:userId/followers", () => {
 
 describe("PUT /users/me/profile_image", () => {
   it("returns the authenticated user with the updated profile image on success", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { user, token } = await createUser();
 
     const res = await request(app)
       .put("/users/me/profile_image")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .attach("profile_image", "src/tests/files/avatar.jpg")
       .expect("Content-Type", /json/)
       .expect(200);
@@ -1074,7 +1002,7 @@ describe("PUT /users/me/profile_image", () => {
       createdAt: expect.any(String),
       description: null,
       location: null,
-      profileImageUrl: `https://example.com/user-${userRes.body.user.id}`,
+      profileImageUrl: `https://example.com/user-${user.id}`,
       url: null,
       pinnedPostId: null,
       _count: {
@@ -1089,11 +1017,11 @@ describe("PUT /users/me/profile_image", () => {
   });
 
   it("returns a 422 error if a file is not attached", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { token } = await createUser();
 
     const res = await request(app)
       .put("/users/me/profile_image")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .expect("Content-Type", /json/)
       .expect(422);
 
@@ -1105,11 +1033,11 @@ describe("PUT /users/me/profile_image", () => {
   });
 
   it("returns a 422 error if the uploaded file is not an image", async () => {
-    const userRes = await request(app).post("/users").send(userCreationPayload);
+    const { token } = await createUser();
 
     const res = await request(app)
       .put("/users/me/profile_image")
-      .auth(userRes.body.token, { type: "bearer" })
+      .auth(token, { type: "bearer" })
       .attach("profile_image", "src/tests/files/file.txt")
       .expect("Content-Type", /json/)
       .expect(422);

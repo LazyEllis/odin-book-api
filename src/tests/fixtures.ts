@@ -41,12 +41,16 @@ export const userUpdatePayload = {
 export const createUser = async ({
   username = "john_doe_123",
 } = {}): Promise<UserWithToken> => {
-  const res = await request(app).post("/users").send({
+  const userRes = await request(app).post("/users").send({
     name: "John Doe",
     username,
     password: "Password123!",
     passwordConfirmation: "Password123!",
   });
 
-  return res.body;
+  const authRes = await request(app)
+    .post("/auth/token")
+    .send({ username, password: "Password123!" });
+
+  return { user: userRes.body, ...authRes.body };
 };

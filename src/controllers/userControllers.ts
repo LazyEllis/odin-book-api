@@ -1,6 +1,5 @@
 import type { RequestHandler } from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { v2 as cloudinary, type UploadApiResponse } from "cloudinary";
 import { prisma } from "../config/prisma.ts";
 import { getAuthenticatedUser } from "../middlewares/auth.ts";
@@ -25,10 +24,6 @@ export const listUsers: RequestHandler = async (req, res) => {
 export const createUser: RequestHandler = async (req, res) => {
   const { name, username, password } = req.body;
 
-  if (!process.env.JWT_SECRET) {
-    throw new Error("JWT_SECRET is not defined in environmental variables");
-  }
-
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const profileImageUrl = generateGravatarURL(username);
@@ -45,11 +40,7 @@ export const createUser: RequestHandler = async (req, res) => {
 
   const user = mapToUserResponse(rawUser);
 
-  const token = jwt.sign({ sub: user.id }, process.env.JWT_SECRET, {
-    expiresIn: "24h",
-  });
-
-  res.status(201).json({ user, token });
+  res.status(201).json(user);
 };
 
 export const getCurrentUser: RequestHandler = async (req, res) => {
