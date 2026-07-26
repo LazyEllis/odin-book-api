@@ -1,10 +1,10 @@
-import type {
-  PostInclude,
-  PostOmit,
-  PostGetPayload,
-} from "../generated/prisma/models.ts";
+import type { PostInclude, PostOmit } from "../generated/prisma/models.ts";
 
-type PostPayload = PostGetPayload<ReturnType<typeof buildPostSelect>>;
+interface PostOptional {
+  likes?: unknown[];
+  reposts?: unknown[];
+  bookmarks?: unknown[];
+}
 
 export const buildPostSelect = (
   userId?: number,
@@ -78,12 +78,12 @@ export const buildPostSelect = (
   },
 });
 
-export const mapToPostResponse = ({
+export const mapToPostResponse = <T extends PostOptional>({
   likes,
   reposts,
   bookmarks,
   ...rest
-}: PostPayload) => ({
+}: T) => ({
   ...rest,
   interactionStatus: {
     isLiked: !!likes && likes.length > 0,

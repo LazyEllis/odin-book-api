@@ -1,10 +1,9 @@
-import type {
-  UserInclude,
-  UserOmit,
-  UserGetPayload,
-} from "../generated/prisma/models.ts";
+import type { UserInclude, UserOmit } from "../generated/prisma/models.ts";
 
-type UserPayload = UserGetPayload<ReturnType<typeof buildUserSelect>>;
+interface UserOptional {
+  followers?: unknown[];
+  following?: unknown[];
+}
 
 export const buildUserSelect = (
   userId?: number,
@@ -31,11 +30,11 @@ export const buildUserSelect = (
   },
 });
 
-export const mapToUserResponse = ({
+export const mapToUserResponse = <T extends UserOptional>({
   followers,
   following,
   ...rest
-}: UserPayload) => ({
+}: T) => ({
   ...rest,
   connectionStatus: {
     isFollower: !!following && following.length > 0,
