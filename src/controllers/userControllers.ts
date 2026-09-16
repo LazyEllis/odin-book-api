@@ -132,6 +132,7 @@ export const listCurrentUserPosts: RequestHandler = async (req, res) => {
   const rawPosts = await prisma.post.findMany({
     where: {
       authorId: id,
+      conversationId: null,
     },
     ...buildPostSelect(id),
     orderBy: {
@@ -160,6 +161,7 @@ export const listUserPosts: RequestHandler = async (req, res) => {
   const rawPosts = await prisma.post.findMany({
     where: {
       authorId: Number(userId),
+      conversationId: null,
     },
     ...buildPostSelect(req.user?.id),
     orderBy: {
@@ -170,6 +172,58 @@ export const listUserPosts: RequestHandler = async (req, res) => {
   const posts = rawPosts.map(mapToPostResponse);
 
   res.json(posts);
+};
+
+export const listCurrentUserReplies: RequestHandler = async (req, res) => {
+  const { id } = getAuthenticatedUser(req.user);
+
+  const rawReplies = await prisma.post.findMany({
+    where: {
+      authorId: id,
+      NOT: {
+        inReplyToPostId: null,
+      },
+    },
+    ...buildPostSelect(req.user?.id),
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const replies = rawReplies.map(mapToPostResponse);
+
+  res.json(replies);
+};
+
+export const listUserReplies: RequestHandler = async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: Number(userId),
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  const rawReplies = await prisma.post.findMany({
+    where: {
+      authorId: Number(userId),
+      NOT: {
+        inReplyToPostId: null,
+      },
+    },
+    ...buildPostSelect(req.user?.id),
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const replies = rawReplies.map(mapToPostResponse);
+
+  res.json(replies);
 };
 
 export const listUserLikes: RequestHandler = async (req, res) => {
