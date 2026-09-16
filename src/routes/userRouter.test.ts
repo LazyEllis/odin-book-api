@@ -937,6 +937,143 @@ describe("GET /users/:userId/replies", () => {
   });
 });
 
+describe("GET /users/me/reposts", () => {
+  it("returns the authenticated user's reposts on success", async () => {
+    const { token } = await createUser();
+    const { user: otherUser, token: otherToken } = await createUser({
+      username: "jane_doe",
+    });
+
+    const postRes = await request(app)
+      .post("/posts")
+      .auth(otherToken, { type: "bearer" })
+      .send({ text: "This is a post from another user." });
+
+    await request(app)
+      .put(`/users/me/reposts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
+
+    const res = await request(app)
+      .get("/users/me/reposts")
+      .auth(token, { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual([
+      {
+        id: expect.any(Number),
+        text: "This is a post from another user.",
+        attachment: null,
+        createdAt: expect.any(String),
+        author: {
+          id: otherUser.id,
+          name: otherUser.name,
+          username: otherUser.username,
+          profileImageUrl: otherUser.profileImageUrl,
+        },
+        conversationId: null,
+        repliedTo: null,
+        quotedPost: null,
+        _count: {
+          reposts: 1,
+          replies: 0,
+          likes: 0,
+          quotes: 0,
+          bookmarks: 0,
+        },
+        interactionStatus: {
+          isLiked: false,
+          isReposted: true,
+          isBookmarked: false,
+        },
+      },
+    ]);
+  });
+
+  it("returns a 401 error if unauthenticated", async () => {
+    await request(app)
+      .get("/users/me/reposts")
+      .expect("Content-Type", /json/)
+      .expect({ message: "Unauthorized" })
+      .expect(401);
+  });
+});
+
+describe("GET /users/:userId/reposts", () => {
+  it("returns a user's reply posts on success", async () => {
+    const { user, token } = await createUser();
+    const { user: otherUser, token: otherToken } = await createUser({
+      username: "jane_doe",
+    });
+
+    const postRes = await request(app)
+      .post("/posts")
+      .auth(otherToken, { type: "bearer" })
+      .send({ text: "This is a post from another user." });
+
+    await request(app)
+      .put(`/users/me/reposts/${postRes.body.id}`)
+      .auth(token, { type: "bearer" });
+
+    const res = await request(app)
+      .get(`/users/${user.id}/reposts`)
+      .auth(token, { type: "bearer" })
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body).toEqual([
+      {
+        id: expect.any(Number),
+        text: "This is a post from another user.",
+        attachment: null,
+        createdAt: expect.any(String),
+        author: {
+          id: otherUser.id,
+          name: otherUser.name,
+          username: otherUser.username,
+          profileImageUrl: otherUser.profileImageUrl,
+        },
+        conversationId: null,
+        repliedTo: null,
+        quotedPost: null,
+        _count: {
+          reposts: 1,
+          replies: 0,
+          likes: 0,
+          quotes: 0,
+          bookmarks: 0,
+        },
+        interactionStatus: {
+          isLiked: false,
+          isReposted: true,
+          isBookmarked: false,
+        },
+      },
+    ]);
+  });
+
+  it("returns a 404 error if the user doesn't exist", async () => {
+    await request(app)
+      .get("/users/1/reposts")
+      .expect("Content-Type", /json/)
+      .expect({ message: "User not found" })
+      .expect(404);
+  });
+
+  it("returns a 422 error if the user ID isn't an integer", async () => {
+    const res = await request(app)
+      .get("/users/1.5/reposts")
+      .expect("Content-Type", /json/)
+      .expect(422);
+
+    expect(res.body).toEqual({
+      errors: expect.arrayContaining([
+        expect.objectContaining({ path: "userId" }),
+      ]),
+    });
+  });
+});
+
 describe("GET /users/:userId/likes", () => {
   it("returns all liked posts on success", async () => {
     const { user, token } = await createUser();

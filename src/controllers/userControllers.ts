@@ -184,7 +184,7 @@ export const listCurrentUserReplies: RequestHandler = async (req, res) => {
         inReplyToPostId: null,
       },
     },
-    ...buildPostSelect(req.user?.id),
+    ...buildPostSelect(id),
     orderBy: {
       createdAt: "desc",
     },
@@ -224,6 +224,60 @@ export const listUserReplies: RequestHandler = async (req, res) => {
   const replies = rawReplies.map(mapToPostResponse);
 
   res.json(replies);
+};
+
+export const listUserReposts: RequestHandler = async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: Number(userId),
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  const reposts = await prisma.repost.findMany({
+    where: {
+      userId: Number(userId),
+    },
+    select: {
+      post: {
+        ...buildPostSelect(req.user?.id),
+      },
+    },
+    orderBy: {
+      repostedAt: "desc",
+    },
+  });
+
+  const repostedPosts = reposts.map((repost) => mapToPostResponse(repost.post));
+
+  res.json(repostedPosts);
+};
+
+export const listCurrentUserReposts: RequestHandler = async (req, res) => {
+  const { id } = getAuthenticatedUser(req.user);
+
+  const reposts = await prisma.repost.findMany({
+    where: {
+      userId: id,
+    },
+    select: {
+      post: {
+        ...buildPostSelect(id),
+      },
+    },
+    orderBy: {
+      repostedAt: "desc",
+    },
+  });
+
+  const repostedPosts = reposts.map((repost) => mapToPostResponse(repost.post));
+
+  res.json(repostedPosts);
 };
 
 export const listUserLikes: RequestHandler = async (req, res) => {

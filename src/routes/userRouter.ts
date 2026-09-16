@@ -15,11 +15,13 @@ import {
   listCurrentUserFollowers,
   listCurrentUserPosts,
   listCurrentUserReplies,
+  listCurrentUserReposts,
   listUserFollowers,
   listUserFollowing,
   listUserLikes,
   listUserPosts,
   listUserReplies,
+  listUserReposts,
   listUsers,
   updateCurrentUser,
   uploadProfileImage,
@@ -41,6 +43,8 @@ userRouter.get("/me/posts", requireAuth, listCurrentUserPosts);
 
 userRouter.get("/me/replies", requireAuth, listCurrentUserReplies);
 
+userRouter.get("/me/reposts", requireAuth, listCurrentUserReposts);
+
 userRouter.get("/me/followers", requireAuth, listCurrentUserFollowers);
 
 userRouter.put(
@@ -60,6 +64,13 @@ userRouter.get(
   optionalAuth,
   validateUserId,
   listUserReplies,
+);
+
+userRouter.get(
+  "/:userId/reposts",
+  optionalAuth,
+  validateUserId,
+  listUserReposts,
 );
 
 userRouter.get("/:userId/likes", optionalAuth, validateUserId, listUserLikes);
